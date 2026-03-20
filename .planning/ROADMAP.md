@@ -8,7 +8,7 @@
 ## Phase 1: Layout Shell
 **Goal:** Every page has a working shell with shared layout components
 **Requirements**: LAY-01, LAY-02, LAY-03, LAY-04, LAY-05
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 **Success Criteria:**
 1. AnnouncementBar renders with rotating messages on every page
 2. Homepage Header renders with logo, search bar, nav links, cart icon with badge
@@ -17,8 +17,8 @@
 5. All components are TypeScript-typed with no errors
 
 Plans:
-- [ ] 01-01-PLAN.md — AnnouncementBar + HomepageHeader + root layout wiring
-- [ ] 01-02-PLAN.md — InnerHeader + Footer components
+- [x] 01-01-PLAN.md — AnnouncementBar + HomepageHeader + root layout wiring
+- [x] 01-02-PLAN.md — InnerHeader + Footer components
 - [ ] 01-03-PLAN.md — Page shells with correct layout wiring per route
 
 ---
@@ -103,7 +103,7 @@ Plans:
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|-------------|
-| 1 | 1/3 | In Progress|  |
+| 1 | 2/3 | In Progress | LAY-01–05 |
 | 2 | Homepage | ○ Pending | HOME-01–10 |
 | 3 | Category Page | ○ Pending | CAT-01–05 |
 | 4 | Product Detail | ○ Pending | PROD-01–08 |

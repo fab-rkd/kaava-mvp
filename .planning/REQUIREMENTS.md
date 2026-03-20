@@ -8,8 +8,8 @@
 ### Layout
 - [x] **LAY-01**: Every page shows AnnouncementBar with rotating promo messages
 - [x] **LAY-02**: Homepage uses full-width Header with logo, search bar, and nav links
-- [ ] **LAY-03**: Inner pages (category, product, cart, checkout) use two-row InnerHeader
-- [ ] **LAY-04**: Category and product pages show Footer with 4-column links grid
+- [x] **LAY-03**: Inner pages (category, product, cart, checkout) use two-row InnerHeader
+- [x] **LAY-04**: Category and product pages show Footer with 4-column links grid
 - [ ] **LAY-05**: Cart and checkout pages omit footer (simplified layout)
 
 ### Homepage
