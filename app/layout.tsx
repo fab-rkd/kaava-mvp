@@ -12,6 +12,7 @@
 
 import type { Metadata } from "next";
 import { CartProvider } from "@/context/CartContext";
+import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +34,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Fonts — loaded here instead of CSS to avoid PostCSS @import order issues */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
+        {/* AnnouncementBar appears on every page, outside CartProvider (no cart context needed) */}
+        <AnnouncementBar />
         {/*
           CartProvider wraps everything so any component anywhere in the app
           can call useCart() to read or update the cart.
