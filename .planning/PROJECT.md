@@ -22,7 +22,8 @@ A shopper can browse verified Ayurvedic products by concern or brand, view produ
 
 ### Active
 
-- [ ] Layout components: AnnouncementBar, Header, InnerHeader, Footer
+- ✓ Layout components: AnnouncementBar, HomepageHeader, InnerHeader, Footer — Phase 1
+- ✓ Page route shells: homepage, category, product, cart, checkout — Phase 1
 - [ ] Homepage: all 15 sections rendered with real data
 - [ ] Category page: filterable product grid by concern/brand
 - [ ] Product detail page: gallery, info, benefits, related products
