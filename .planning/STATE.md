@@ -2,13 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+current_plan: Phase 1 complete (all 3 plans done)
 status: in_progress
-last_updated: "2026-03-20T16:22:00Z"
+last_updated: "2026-03-20T16:24:48.664Z"
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # State: Kaava MVP
@@ -18,21 +19,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Shopper can browse verified Ayurvedic products by concern or brand, add to cart, on a live Vercel site
-**Current focus:** Phase 01 — layout-shell
+**Current focus:** Phase 02 — Homepage (Phase 01 complete)
 
 ## Current Status
 
-**Active Phase:** 1 — Layout Shell
-**Current Plan:** 3 of 3 (01-01, 01-02 complete)
-**Last session:** 2026-03-20 — Completed 01-layout-shell/01-02-PLAN.md
+**Active Phase:** 2 — Homepage
+**Current Plan:** Phase 01 complete — ready for Phase 02
+**Last session:** 2026-03-20 — Completed 01-layout-shell/01-03-PLAN.md
 
-[██████░░░░] 67%
+[██████████] 100%
 
 ## Phase Progress
 
 | Phase | Status |
 |-------|--------|
-| 1 — Layout Shell | ◑ In progress (2/3 plans done) |
+| 1 — Layout Shell | ● Complete (3/3 plans done) |
 | 2 — Homepage | ○ Not started |
 | 3 — Category Page | ○ Not started |
 | 4 — Product Detail | ○ Not started |
@@ -48,6 +49,8 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 | 01-layout-shell | prefers-reduced-motion: skips rotation interval entirely, shows first message statically |
 | 01-layout-shell | Footer is a server component — content is purely static, no hooks needed |
 | 01-layout-shell | InnerHeader must be client component to call useCart (React context hook) |
+| 01-layout-shell | Dynamic params typed as Promise<{param}> not PageProps helper — no .next/types at execution time, explicit typing is equivalent |
+| 01-layout-shell | Cart and checkout omit Footer per LAY-05 — transactional pages use simplified layout |
 
 ## Performance Metrics
 
@@ -55,3 +58,4 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 |-------|------|----------|-------|-------|
 | 01-layout-shell | 01 | 2m | 2 | 3 |
 | 01-layout-shell | 02 | 3m | 2 | 2 |
+| 01-layout-shell | 03 | 3m | 2 | 5 |
