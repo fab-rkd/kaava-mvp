@@ -138,9 +138,16 @@ export default function CartDrawer() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <p className="font-outfit text-[15px] font-bold text-dark">
-                      {formatPrice(item.special_price)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-outfit text-[15px] font-bold text-dark">
+                        {formatPrice(item.special_price * item.quantity)}
+                      </p>
+                      {item.quantity > 1 && (
+                        <span className="font-inter text-[11px] text-muted">
+                          ({formatPrice(item.special_price)} × {item.quantity})
+                        </span>
+                      )}
+                    </div>
 
                     {/* Quantity controls */}
                     <div className="flex items-center gap-0">

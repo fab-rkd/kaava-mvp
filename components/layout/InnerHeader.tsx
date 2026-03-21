@@ -63,22 +63,21 @@ export default function InnerHeader() {
 
         {/* Main Bar — 72px height */}
         <div style={{ height: 72 }}>
-        <div className="content-container flex items-center justify-between h-full">
-          {/* LEFT: Burger (mobile) + Logo */}
+        <div className="content-container relative flex items-center justify-between h-full">
+          {/* LEFT: Burger (mobile) + Logo (desktop) */}
           <div className="flex items-center" style={{ gap: 12 }}>
             <MobileNav cartItemCount={totalItems} onCartClick={openDrawer} />
-            <Link href="/" className="flex items-center">
-              <img
-                src="/kaava-logo-text.png"
-                alt="Kaava"
-                className="h-10 w-auto"
-              />
+            <Link href="/" className="hidden lg:flex items-center">
+              <img src="/kaava-logo-text.png" alt="Kaava" className="h-10 w-auto" />
             </Link>
           </div>
 
-          {/* CENTER: Search Bar — hidden on mobile */}
+          {/* CENTER: Logo on mobile, Search bar on desktop */}
+          <Link href="/" className="lg:hidden flex items-center absolute left-1/2 -translate-x-1/2">
+            <img src="/kaava-logo-text.png" alt="Kaava" className="h-7 w-auto" />
+          </Link>
           <div
-            className="search-container hidden sm:flex items-center bg-white transition-shadow"
+            className="search-container hidden lg:flex items-center bg-white transition-shadow"
             style={{
               width: 600,
               maxWidth: "100%",
@@ -111,25 +110,31 @@ export default function InnerHeader() {
             </button>
           </div>
 
-          {/* RIGHT: Icon Buttons */}
+          {/* RIGHT: Wishlist/Account/WhatsApp desktop only, Cart always */}
           <div className="flex items-center" style={{ gap: 12 }}>
-            <Link href="/wishlist" aria-label="Wishlist" className="hidden sm:flex glass-icon-btn relative">
-              <Heart size={18} className="text-white" />
-              {wishlistCount > 0 && (
-                <span
-                  className="absolute flex items-center justify-center rounded-full bg-saffron font-inter font-bold text-white"
-                  style={{ width: 16, height: 16, top: -4, right: -4, fontSize: 9 }}
-                >
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-            <button aria-label="Account" onClick={openAuthModal} className="hidden sm:flex glass-icon-btn">
-              <User size={18} className="text-white" />
-            </button>
-            <button aria-label="WhatsApp" className="hidden sm:flex glass-icon-btn">
-              <MessageCircle size={18} className="text-whatsapp" />
-            </button>
+            <div className="hidden lg:block">
+              <Link href="/wishlist" aria-label="Wishlist" className="glass-icon-btn relative">
+                <Heart size={18} className="text-white" />
+                {wishlistCount > 0 && (
+                  <span
+                    className="absolute flex items-center justify-center rounded-full bg-saffron font-inter font-bold text-white"
+                    style={{ width: 16, height: 16, top: -4, right: -4, fontSize: 9 }}
+                  >
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+            <div className="hidden lg:block">
+              <button aria-label="Account" onClick={openAuthModal} className="glass-icon-btn">
+                <User size={18} className="text-white" />
+              </button>
+            </div>
+            <div className="hidden lg:block">
+              <button aria-label="WhatsApp" className="glass-icon-btn">
+                <MessageCircle size={18} className="text-whatsapp" />
+              </button>
+            </div>
             <button
               onClick={openDrawer}
               aria-label={`Cart (${totalItems} items)`}

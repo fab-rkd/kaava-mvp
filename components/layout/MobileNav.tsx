@@ -166,19 +166,36 @@ export default function MobileNav({ cartItemCount, onCartClick }: MobileNavProps
           </Link>
         </nav>
 
-        {/* Bottom icon row */}
-        <div className="mt-auto px-6 pb-8">
-          <div className="flex items-center" style={{ gap: 12 }}>
-            <button aria-label="Wishlist" className="glass-icon-btn">
-              <Heart size={18} className="text-white" />
-            </button>
-            <button aria-label="Account" onClick={() => { setOpen(false); openAuthModal(); }} className="glass-icon-btn">
-              <User size={18} className="text-white" />
-            </button>
-            <button aria-label="WhatsApp" className="glass-icon-btn">
-              <MessageCircle size={18} className="text-whatsapp" />
-            </button>
-          </div>
+        {/* Bottom links — full text with icons */}
+        <div className="mt-auto px-6 pb-8 flex flex-col" style={{ gap: 4, borderTop: "1px solid rgb(255 255 255 / 0.1)", paddingTop: 20 }}>
+          <Link
+            href="/wishlist"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 font-inter text-white/80 py-2.5 transition-colors hover:text-white"
+            style={{ fontSize: 15 }}
+          >
+            <Heart size={18} />
+            My Wishlist
+          </Link>
+          <button
+            onClick={() => { setOpen(false); openAuthModal(); }}
+            className="flex items-center gap-3 font-inter text-white/80 py-2.5 transition-colors hover:text-white text-left"
+            style={{ fontSize: 15 }}
+          >
+            <User size={18} />
+            My Account
+          </button>
+          <a
+            href="https://wa.me/919999999999"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 font-inter text-white/80 py-2.5 transition-colors hover:text-white"
+            style={{ fontSize: 15 }}
+          >
+            <MessageCircle size={18} className="text-whatsapp" />
+            WhatsApp Support
+          </a>
         </div>
       </div>
     </>

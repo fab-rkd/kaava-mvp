@@ -126,11 +126,16 @@ export default function CartPage() {
                             {item.brand}
                           </p>
                           <p className="font-outfit text-[18px] font-bold text-dark mt-1">
-                            {formatPrice(item.special_price)}
+                            {formatPrice(item.special_price * item.quantity)}
                           </p>
+                          {item.quantity > 1 && (
+                            <p className="font-inter text-[12px] text-muted">
+                              {formatPrice(item.special_price)} × {item.quantity}
+                            </p>
+                          )}
                           {item.price > item.special_price && (
-                            <p className="font-inter text-[13px] text-muted line-through">
-                              {formatPrice(item.price)}
+                            <p className="font-inter text-[12px] text-muted line-through">
+                              MRP {formatPrice(item.price * item.quantity)}
                             </p>
                           )}
                         </div>
