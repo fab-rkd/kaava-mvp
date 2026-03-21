@@ -11,9 +11,9 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-forest-dark text-white">
+    <footer className="w-full bg-dark text-white">
       {/* ── Main grid ── */}
-      <div className="max-w-content mx-auto px-4 py-12">
+      <div className="content-container py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* ── Column 1: Brand ── */}
           <div>
@@ -161,7 +161,7 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="border-t border-white/20 mt-8 pt-6 flex justify-between items-center">
+        <div className="border-t border-white/20 mt-8 pt-6 flex flex-col sm:flex-row gap-2 justify-between items-center">
           <p className="text-sm text-white/50 font-inter">
             2026 Kaava. All rights reserved.
           </p>

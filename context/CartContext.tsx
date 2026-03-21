@@ -14,9 +14,12 @@ import {
   createContext,
   useContext,
   useReducer,
+  useEffect,
   ReactNode,
 } from "react";
 import type { CartState, CartAction, CartItem, Product } from "@/types";
+
+const STORAGE_KEY = "kaava-cart";
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 const initialState: CartState = {
@@ -85,6 +88,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "CLEAR_CART":
       return { ...initialState };
 
+    case "HYDRATE":
+      return {
+        ...state,
+        items: action.payload as CartItem[],
+      };
+
     default:
       return state;
   }
@@ -112,6 +121,30 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 // `children: ReactNode` means "anything React can render" — components, text, etc.
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  // Hydrate cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const items = JSON.parse(saved) as CartItem[];
+        if (items.length > 0) {
+          dispatch({ type: "HYDRATE", payload: items });
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // Persist cart items to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [state.items]);
 
   // Derived values — computed from state, not stored separately
   const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);

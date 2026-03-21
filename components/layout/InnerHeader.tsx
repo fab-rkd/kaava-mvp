@@ -2,73 +2,146 @@
 // ─── components/layout/InnerHeader.tsx ───────────────────────────────────────
 //
 // Two-row header for inner pages (category, product, cart, checkout).
+// Matches Pencil design node BNDgj.
 //
-// Row 1: Logo | Search bar | Home link + Cart icon with badge
-// Row 2: Category navigation links
+// Announcement bar: promo strip (same as homepage)
+// Row 1 (Main bar): Logo | Search bar | Icon buttons
+// Row 2 (Nav bar):  Category navigation links
 //
 // Client component because it uses useCart (React context/hook).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Heart, User, MessageCircle, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useAuthModal } from "@/context/AuthModalContext";
+import MobileNav from "@/components/layout/MobileNav";
+import MegaNav from "@/components/layout/MegaNav";
 
 export default function InnerHeader() {
+  const router = useRouter();
   const { totalItems, openDrawer } = useCart();
+  const { wishlistCount } = useWishlist();
+  const { openAuthModal } = useAuthModal();
+  const [query, setQuery] = useState("");
+
+  const handleSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    }
+  }, [query, router]);
 
   return (
-    <header>
-      {/* ── Row 1: Main header bar ── */}
-      <div className="w-full bg-white border-b border-kaava-border">
-        <div className="max-w-content mx-auto px-4 py-3 flex items-center justify-between">
-          {/* LEFT: Logo */}
-          <Link href="/">
-            <span className="font-outfit text-xl font-bold text-forest">
-              Kaava
-            </span>
-          </Link>
+    <header className="w-full">
+      {/* ── Announcement Bar + Main Bar — single gradient parent ──────── */}
+      <div
+        className="w-full"
+        style={{ background: "linear-gradient(180deg, #1B4D3E 0%, #2D6A4F 100%)" }}
+      >
+        {/* Announcement Bar — subtle, secondary to nav */}
+        <div
+          className="content-container flex flex-wrap items-center justify-center"
+          style={{ paddingTop: 10, paddingBottom: 10, gap: 6, borderBottom: "1px solid rgb(255 255 255 / 0.08)" }}
+        >
+          <span className="font-inter font-normal text-white/60" style={{ fontSize: 12 }}>
+            Free shipping above
+          </span>
+          <span className="font-inter font-semibold text-gold" style={{ fontSize: 12 }}>₹499</span>
+          <span className="font-inter font-normal text-white/40" style={{ fontSize: 12 }}>|</span>
+          <span className="font-inter font-normal text-white/60" style={{ fontSize: 12 }}>
+            Use code
+          </span>
+          <span className="font-inter font-semibold text-gold" style={{ fontSize: 12 }}>KAAVA10</span>
+          <span className="font-inter font-normal text-white/60" style={{ fontSize: 12 }}>
+            for 10% off
+          </span>
+        </div>
 
-          {/* CENTER: Search bar */}
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="border border-kaava-border rounded-full px-4 py-2 text-sm font-inter w-full max-w-sm focus:outline-none focus:border-saffron"
-          />
-
-          {/* RIGHT: Home link + Cart */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm font-inter text-kaava-secondary hover:text-forest"
-            >
-              Home
+        {/* Main Bar — 72px height */}
+        <div style={{ height: 72 }}>
+        <div className="content-container flex items-center justify-between h-full">
+          {/* LEFT: Burger (mobile) + Logo */}
+          <div className="flex items-center" style={{ gap: 12 }}>
+            <MobileNav cartItemCount={totalItems} onCartClick={openDrawer} />
+            <Link href="/" className="flex items-center">
+              <span
+                className="font-devanagari font-bold text-white"
+                style={{ fontSize: 42, lineHeight: 1 }}
+              >
+                कावा
+              </span>
             </Link>
+          </div>
 
-            {/* Cart button with badge */}
+          {/* CENTER: Search Bar — hidden on mobile */}
+          <div
+            className="search-container hidden sm:flex items-center bg-white transition-shadow"
+            style={{
+              width: 600,
+              maxWidth: "100%",
+              height: 44,
+              borderRadius: 9999,
+              paddingLeft: 20,
+              paddingRight: 5,
+              boxShadow: "0 4px 16px #00000015",
+            }}
+          >
+            <Search size={18} className="shrink-0 text-placeholder" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              placeholder="Search for products, brands, concerns..."
+              className="search-input flex-1 bg-transparent font-inter text-body-sm px-3 text-dark"
+              style={{ caretColor: "var(--color-forest)" }}
+            />
+            <button
+              aria-label="Search"
+              onClick={handleSearch}
+              className="flex items-center justify-center shrink-0 rounded-full bg-forest transition-colors hover:bg-forest-light"
+              style={{ height: 34, paddingLeft: 20, paddingRight: 20 }}
+            >
+              <span className="font-inter font-bold text-white" style={{ fontSize: 12 }}>
+                Search
+              </span>
+            </button>
+          </div>
+
+          {/* RIGHT: Icon Buttons */}
+          <div className="flex items-center" style={{ gap: 12 }}>
+            <Link href="/wishlist" aria-label="Wishlist" className="hidden sm:flex glass-icon-btn relative">
+              <Heart size={18} className="text-white" />
+              {wishlistCount > 0 && (
+                <span
+                  className="absolute flex items-center justify-center rounded-full bg-saffron font-inter font-bold text-white"
+                  style={{ width: 16, height: 16, top: -4, right: -4, fontSize: 9 }}
+                >
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+            <button aria-label="Account" onClick={openAuthModal} className="hidden sm:flex glass-icon-btn">
+              <User size={18} className="text-white" />
+            </button>
+            <button aria-label="WhatsApp" className="hidden sm:flex glass-icon-btn">
+              <MessageCircle size={18} className="text-whatsapp" />
+            </button>
             <button
               onClick={openDrawer}
-              className="relative"
-              aria-label="Open cart"
+              aria-label={`Cart (${totalItems} items)`}
+              className="glass-icon-btn relative"
             >
-              {/* Shopping bag icon */}
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-kaava-dark"
-              >
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-
-              {/* Badge: only shown when cart has items */}
+              <ShoppingBag size={18} className="text-white" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-2 bg-saffron text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-semibold">
+                <span
+                  className="absolute flex items-center justify-center rounded-full bg-saffron font-inter font-bold text-white"
+                  style={{ width: 16, height: 16, top: -4, right: -4, fontSize: 9 }}
+                >
                   {totalItems}
                 </span>
               )}
@@ -76,40 +149,17 @@ export default function InnerHeader() {
           </div>
         </div>
       </div>
+      </div>
 
-      {/* ── Row 2: Navigation bar ── */}
-      <div className="w-full bg-kaava-surface1">
-        <nav className="max-w-content mx-auto px-4 py-2 flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-sm font-inter text-kaava-secondary hover:text-forest transition-colors"
-          >
-            All Concerns
-          </Link>
-          <Link
-            href="/category/hair"
-            className="text-sm font-inter text-kaava-secondary hover:text-forest transition-colors"
-          >
-            Hair
-          </Link>
-          <Link
-            href="/category/skin"
-            className="text-sm font-inter text-kaava-secondary hover:text-forest transition-colors"
-          >
-            Skin
-          </Link>
-          <Link
-            href="/category/digestion"
-            className="text-sm font-inter text-kaava-secondary hover:text-forest transition-colors"
-          >
-            Digestion
-          </Link>
-          <Link
-            href="/category/immunity"
-            className="text-sm font-inter text-kaava-secondary hover:text-forest transition-colors"
-          >
-            Immunity
-          </Link>
+      {/* ── Row 2: Nav Bar ───────────────────────────────────────────────
+           Pencil: bg #245c44, height 44px, centered links
+           Hidden on mobile — nav links live inside MobileNav drawer
+           ─────────────────────────────────────────────────────────────── */}
+      <div className="hidden lg:block w-full bg-forest-nav" style={{ height: 44 }}>
+        <nav
+          className="content-container flex items-center justify-center h-full"
+        >
+          <MegaNav />
         </nav>
       </div>
     </header>
