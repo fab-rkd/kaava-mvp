@@ -1,43 +1,22 @@
 import Link from "next/link";
+import { getAllPosts } from "@/lib/blog";
 
-const EDU_CARDS = [
-  {
-    image: "https://images.unsplash.com/photo-1701418527182-f2a181574cb5?w=600&h=440&fit=crop",
-    tag: "Ingredient Guide",
-    tagBg: "#2D6A4F",
-    title: "Ashwagandha: The Complete Guide",
-    desc: "Benefits, dosage, and what to look for in a genuine product",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1631980839248-1a84a60c66ac?w=600&h=440&fit=crop",
-    tag: "How To",
-    tagBg: "#E85D04",
-    title: "How to Read Ayurvedic Product Labels",
-    desc: "Understanding AYUSH numbers, batch codes, and expiry formats",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&h=440&fit=crop",
-    tag: "Wellness",
-    tagBg: "#2D6A4F",
-    title: "Building a Daily Ayurvedic Routine",
-    desc: "Morning rituals, herbal teas, and simple practices for better health",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=440&fit=crop",
-    tag: "Nutrition",
-    tagBg: "#E85D04",
-    title: "Triphala vs Chyawanprash: Which One?",
-    desc: "Comparing two iconic Ayurvedic formulations for modern wellness",
-  },
-];
+const TAG_COLORS: Record<string, string> = {
+  "Ingredient Guide": "#2D6A4F",
+  "How To": "#E85D04",
+  "Wellness": "#2D6A4F",
+  "Nutrition": "#E85D04",
+  "Ayurveda 101": "#1B4D3E",
+};
 
 export default function KnowYourAyurveda() {
+  const posts = getAllPosts().slice(0, 4);
+
   return (
     <section id="know-your-ayurveda" className="w-full bg-white" style={{ borderBottom: "1px solid var(--color-border)" }}>
       <div className="content-container" style={{ paddingTop: 72, paddingBottom: 72 }}>
         <div className="flex flex-col" style={{ gap: 32 }}>
 
-          {/* Header — Pencil: eEsoE — justify space-between */}
           <div className="flex items-center justify-between">
             <h2 className="font-outfit text-section-title text-dark" style={{ fontWeight: 800 }}>
               Know Your Ayurveda
@@ -51,11 +30,11 @@ export default function KnowYourAyurveda() {
             </Link>
           </div>
 
-          {/* Edu Grid — Pencil: wGZL4 — gap 20, 4 cols */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 20 }}>
-            {EDU_CARDS.map(({ image, tag, tagBg, title, desc }) => (
-              <article
-                key={title}
+            {posts.map((post) => (
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
                 className="flex flex-col bg-white overflow-hidden hover-lift"
                 style={{
                   minHeight: 340,
@@ -64,14 +43,12 @@ export default function KnowYourAyurveda() {
                   boxShadow: "var(--shadow-card-sm)",
                 }}
               >
-                {/* Image — Pencil: 220px height */}
                 <div className="relative w-full overflow-hidden" style={{ height: 220, borderRadius: "20px 20px 0 0" }}>
                   <img
-                    src={image}
-                    alt={title}
+                    src={post.image}
+                    alt={post.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Tag badge */}
                   <span
                     className="absolute font-inter font-bold text-white"
                     style={{
@@ -80,23 +57,22 @@ export default function KnowYourAyurveda() {
                       fontSize: 10,
                       padding: "5px 12px",
                       borderRadius: 12,
-                      background: tagBg,
+                      background: TAG_COLORS[post.category] || "#2D6A4F",
                     }}
                   >
-                    {tag}
+                    {post.category}
                   </span>
                 </div>
 
-                {/* Body — Pencil: padding [16, 16, 18, 16], gap 6 */}
                 <div className="flex flex-col flex-1" style={{ padding: "16px 16px 18px 16px", gap: 6 }}>
                   <h3 className="font-outfit font-bold text-dark" style={{ fontSize: 15, lineHeight: 1.3 }}>
-                    {title}
+                    {post.title}
                   </h3>
                   <p className="font-inter text-muted" style={{ fontSize: 12, lineHeight: 1.4 }}>
-                    {desc}
+                    {post.excerpt}
                   </p>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>

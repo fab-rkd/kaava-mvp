@@ -17,9 +17,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* ── Column 1: Brand ── */}
           <div>
-            <p className="font-outfit text-2xl font-bold text-white mb-2">
-              Kaava
-            </p>
+            <div className="mb-2">
+              <img src="/kaava-logo-text.png" alt="Kaava" className="h-9 w-auto brightness-100" />
+            </div>
             <p className="text-sm text-white/70 font-inter mb-4">
               India&apos;s Verified Ayurveda Marketplace
             </p>

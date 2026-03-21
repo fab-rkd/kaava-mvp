@@ -62,8 +62,8 @@ export default function CheckoutPage() {
         <div
           className="content-container flex items-center justify-between h-full"
         >
-          <Link href="/" className="font-devanagari text-white text-[24px] font-bold no-underline">
-            &#2325;&#2366;&#2357;&#2366;
+          <Link href="/" className="flex items-center">
+            <img src="/kaava-logo-text.png" alt="Kaava" className="h-8 w-auto" />
           </Link>
           <span className="font-inter text-[14px] text-white/85 flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

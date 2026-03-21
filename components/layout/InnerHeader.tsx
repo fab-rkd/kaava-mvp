@@ -68,12 +68,11 @@ export default function InnerHeader() {
           <div className="flex items-center" style={{ gap: 12 }}>
             <MobileNav cartItemCount={totalItems} onCartClick={openDrawer} />
             <Link href="/" className="flex items-center">
-              <span
-                className="font-devanagari font-bold text-white"
-                style={{ fontSize: 42, lineHeight: 1 }}
-              >
-                कावा
-              </span>
+              <img
+                src="/kaava-logo-text.png"
+                alt="Kaava"
+                className="h-10 w-auto"
+              />
             </Link>
           </div>
 
