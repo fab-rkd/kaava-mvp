@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Outfit, Inter, Noto_Serif_Devanagari } from "next/font/google";
+import { Outfit, Inter, Noto_Serif_Devanagari, Geist } from "next/font/google";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AccountModal from "@/components/auth/AccountModal";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 // ── Font Setup (Next.js 16 self-hosted via next/font) ──────────────────
 // These are loaded at build time and served from the same domain.
@@ -50,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${inter.variable} ${devanagari.variable}`}
+      className={cn(outfit.variable, inter.variable, devanagari.variable, "font-sans", geist.variable)}
     >
       <body>
         <CartProvider>
