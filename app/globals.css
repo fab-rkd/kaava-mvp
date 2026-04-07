@@ -193,6 +193,11 @@ body {
   outline-offset: 2px;
 }
 
+/* shadcn form elements handle their own focus ring — remove saffron outline */
+[data-slot]:focus-visible {
+  outline: none;
+}
+
 /* Search inputs inside pill containers: no individual focus ring.
    The parent container handles the visual focus state instead. */
 .search-input,
@@ -437,6 +442,17 @@ body {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Restore Kaava design tokens overridden by shadcn ────────────────────── */
+@theme inline {
+  --color-muted: #888888;
+  --color-border: #F0F0F0;
+  --color-divider: #E0E0E0;
+  --color-surface: #FAFAFA;
+  --color-surface-green: #F8FBF8;
+  --color-border-green: #E0EDE0;
+  --color-placeholder: #999999;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -444,18 +460,18 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.45 0.1 160);       /* forest #2D6A4F */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.97 0.01 160);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --input: oklch(0.88 0 0);             /* slightly darker for visible borders */
+  --ring: oklch(0.45 0.1 160);          /* forest green ring */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

@@ -8,6 +8,22 @@
 
 import { useState, useCallback, useRef, type ChangeEvent, type DragEvent } from "react";
 import Link from "next/link";
+import { Check, ChevronLeft, ChevronRight, Upload, FileText, X, Pencil, Loader2 } from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -147,6 +163,7 @@ export default function VendorOnboardingPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [applicationId, setApplicationId] = useState("");
   const [consentChecked, setConsentChecked] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // ─── Field Updaters ───────────────────────────────────────────────────────
 
@@ -258,7 +275,6 @@ export default function VendorOnboardingPage() {
       if (!formData.preferredTier) newErrors.preferredTier = "Select a preferred tier";
     }
 
-    // Step 4: GSTIN format validation (optional field)
     if (step === 4) {
       if (formData.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/.test(formData.gstin.toUpperCase())) {
         newErrors.gstin = "Enter a valid GSTIN (e.g., 22AAAAA0000A1Z5)";
@@ -299,6 +315,9 @@ export default function VendorOnboardingPage() {
     }
 
     setIsSubmitting(true);
+    setSubmitError("");
+    setErrors({});
+
     try {
       // Upload files first
       const uploadedFiles: Record<string, string> = {};
@@ -308,10 +327,13 @@ export default function VendorOnboardingPage() {
           fd.append("file", file);
           fd.append("type", key);
           const uploadRes = await fetch("/api/vendor/upload", { method: "POST", body: fd });
-          if (uploadRes.ok) {
-            const data = await uploadRes.json();
-            uploadedFiles[key] = data.url || data.filename;
+          if (!uploadRes.ok) {
+            setSubmitError(`Failed to upload ${key.replace(/([A-Z])/g, " $1").toLowerCase()}. Please try again.`);
+            setIsSubmitting(false);
+            return;
           }
+          const data = await uploadRes.json();
+          uploadedFiles[key] = data.url || data.filename;
         }
       }
 
@@ -335,14 +357,23 @@ export default function VendorOnboardingPage() {
         setApplicationId(data.id || generateUUID());
         setIsSubmitted(true);
       } else {
-        // Still show success for MVP (API may not exist yet)
-        setApplicationId(generateUUID());
-        setIsSubmitted(true);
+        // Handle server validation errors
+        try {
+          const errorData = await res.json();
+          if (errorData.errors && typeof errorData.errors === "object") {
+            // Per-field errors from server
+            setErrors(errorData.errors);
+            if (errorData.step) {
+              setCurrentStep(errorData.step);
+            }
+          }
+          setSubmitError(errorData.message || "Submission failed. Please check your information and try again.");
+        } catch {
+          setSubmitError("Submission failed. Please try again later.");
+        }
       }
     } catch {
-      // For MVP: show success even if API is not set up
-      setApplicationId(generateUUID());
-      setIsSubmitted(true);
+      setSubmitError("Could not connect to the server. Please check your internet connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -356,9 +387,7 @@ export default function VendorOnboardingPage() {
         <OnboardingHeader />
         <div className="content-container py-16 flex flex-col items-center justify-center text-center">
           <div className="w-20 h-20 rounded-full bg-forest/10 flex items-center justify-center mb-6">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <Check className="w-10 h-10 text-forest" strokeWidth={2.5} />
           </div>
           <h1 className="font-outfit text-section-title font-bold text-dark mb-3">
             Application Submitted Successfully!
@@ -366,16 +395,15 @@ export default function VendorOnboardingPage() {
           <p className="font-inter text-body text-text-secondary max-w-lg mb-6">
             Your vendor application has been received. Our team will review your details and get back to you within 3-5 business days.
           </p>
-          <div className="bg-white border border-kaava-border rounded-[12px] px-6 py-4 mb-8">
-            <p className="font-inter text-body-sm text-muted mb-1">Application ID</p>
-            <p className="font-inter text-body-lg font-semibold text-dark font-mono tracking-wide">{applicationId}</p>
-          </div>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center h-12 px-8 bg-forest text-white font-inter text-body font-semibold rounded-[8px] hover:bg-forest-dark transition-colors"
-          >
-            Back to Home
-          </Link>
+          <Card className="mb-8">
+            <CardContent className="text-center">
+              <p className="font-inter text-body-sm text-muted mb-1">Application ID</p>
+              <p className="font-inter text-body-lg font-semibold text-dark font-mono tracking-wide">{applicationId}</p>
+            </CardContent>
+          </Card>
+          <Button asChild className="h-12 px-8 bg-forest text-white hover:bg-forest-dark font-inter text-body font-semibold">
+            <Link href="/">Back to Home</Link>
+          </Button>
         </div>
       </div>
     );
@@ -388,82 +416,92 @@ export default function VendorOnboardingPage() {
       <OnboardingHeader />
 
       <div className="content-container py-8">
-        {/* Step Indicator */}
         <StepIndicator currentStep={currentStep} onStepClick={goToStep} />
 
-        {/* Form Container */}
         <div className="max-w-3xl mx-auto mt-8">
-          <div className="bg-white border border-kaava-border rounded-[20px] p-6 sm:p-8 md:p-10">
-            {currentStep === 1 && (
-              <Step1BusinessInfo formData={formData} errors={errors} updateField={updateField} />
-            )}
-            {currentStep === 2 && (
-              <Step2Addresses formData={formData} errors={errors} updateField={updateField} updateAddress={updateAddress} />
-            )}
-            {currentStep === 3 && (
-              <Step3BrandProducts formData={formData} errors={errors} updateField={updateField} toggleCategory={toggleCategory} />
-            )}
-            {currentStep === 4 && (
-              <Step4Documents formData={formData} errors={errors} updateField={updateField} files={files} onFileSelect={handleFileSelect} />
-            )}
-            {currentStep === 5 && (
-              <Step5Review
-                formData={formData}
-                files={files}
-                errors={errors}
-                consentChecked={consentChecked}
-                onConsentChange={setConsentChecked}
-                onEditStep={goToStep}
-              />
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-kaava-border">
-              {currentStep > 1 ? (
-                <button
-                  onClick={goBack}
-                  className="inline-flex items-center gap-2 h-11 px-6 border border-kaava-border rounded-[8px] font-inter text-body-sm font-semibold text-text-label hover:bg-surface transition-colors"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  Back
-                </button>
-              ) : (
-                <div />
-              )}
-
-              {currentStep < 5 ? (
-                <button
-                  onClick={goNext}
-                  className="inline-flex items-center gap-2 h-11 px-8 bg-forest text-white rounded-[8px] font-inter text-body-sm font-semibold hover:bg-forest-dark transition-colors"
-                >
-                  Continue
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 h-11 px-8 bg-forest text-white rounded-[8px] font-inter text-body-sm font-semibold hover:bg-forest-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                      </svg>
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Application"
-                  )}
-                </button>
-              )}
+          {submitError && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+              <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <div className="flex-1">
+                <p className="font-inter text-sm font-medium text-red-800">{submitError}</p>
+                <p className="font-inter text-xs text-red-600 mt-0.5">Your information has been preserved. Fix any issues and try again.</p>
+              </div>
+              <button onClick={() => setSubmitError("")} className="shrink-0 text-red-400 hover:text-red-600 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          </div>
+          )}
+
+          <Card className="shadow-card border-0 ring-0">
+            <CardContent className="p-6 sm:p-8 md:p-10">
+              {currentStep === 1 && (
+                <Step1BusinessInfo formData={formData} errors={errors} updateField={updateField} />
+              )}
+              {currentStep === 2 && (
+                <Step2Addresses formData={formData} errors={errors} updateField={updateField} updateAddress={updateAddress} />
+              )}
+              {currentStep === 3 && (
+                <Step3BrandProducts formData={formData} errors={errors} updateField={updateField} toggleCategory={toggleCategory} />
+              )}
+              {currentStep === 4 && (
+                <Step4Documents formData={formData} errors={errors} updateField={updateField} files={files} onFileSelect={handleFileSelect} />
+              )}
+              {currentStep === 5 && (
+                <Step5Review
+                  formData={formData}
+                  files={files}
+                  errors={errors}
+                  consentChecked={consentChecked}
+                  onConsentChange={setConsentChecked}
+                  onEditStep={goToStep}
+                />
+              )}
+
+              <Separator className="mt-8 mb-6" />
+
+              <div className="flex items-center justify-between">
+                {currentStep > 1 ? (
+                  <Button
+                    variant="outline"
+                    onClick={goBack}
+                    className="h-10 px-5 gap-2 font-inter text-sm font-semibold"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+                ) : (
+                  <div />
+                )}
+
+                {currentStep < 5 ? (
+                  <Button
+                    onClick={goNext}
+                    className="h-10 px-7 gap-2 bg-forest text-white hover:bg-forest-dark font-inter text-sm font-semibold"
+                  >
+                    Continue
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="h-10 px-7 gap-2 bg-forest text-white hover:bg-forest-dark font-inter text-sm font-semibold disabled:opacity-60"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Application"
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -499,57 +537,63 @@ function StepIndicator({
   onStepClick: (step: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-center overflow-x-auto scrollbar-hide py-2">
+    <div className="flex items-start justify-center overflow-x-auto scrollbar-hide py-2">
       {STEPS.map((step, index) => {
         const isActive = step.id === currentStep;
         const isCompleted = step.id < currentStep;
 
         return (
-          <div key={step.id} className="flex items-center">
+          <div key={step.id} className="flex items-start">
             {index > 0 && (
               <div
-                className="h-[2px] transition-colors hidden sm:block"
-                style={{
-                  width: 32,
-                  backgroundColor: isCompleted || isActive ? "#2D6A4F" : "#E0E0E0",
-                }}
-              />
+                className="hidden sm:block mt-[15px]"
+                style={{ width: 40 }}
+              >
+                <div
+                  className="h-[2px] w-full rounded-full transition-colors"
+                  style={{
+                    backgroundColor: isCompleted || isActive ? "#2D6A4F" : "#E0E0E0",
+                  }}
+                />
+              </div>
             )}
             {index > 0 && (
               <div
-                className="h-[2px] transition-colors sm:hidden"
-                style={{
-                  width: 12,
-                  backgroundColor: isCompleted || isActive ? "#2D6A4F" : "#E0E0E0",
-                }}
-              />
+                className="sm:hidden mt-[15px]"
+                style={{ width: 16 }}
+              >
+                <div
+                  className="h-[2px] w-full rounded-full transition-colors"
+                  style={{
+                    backgroundColor: isCompleted || isActive ? "#2D6A4F" : "#E0E0E0",
+                  }}
+                />
+              </div>
             )}
 
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1.5" style={{ width: 80 }}>
               <button
                 onClick={() => {
                   if (isCompleted) onStepClick(step.id);
                 }}
-                className={`flex h-8 w-8 items-center justify-center rounded-full font-inter text-[13px] font-semibold transition-colors ${
+                className={`flex h-[30px] w-[30px] items-center justify-center rounded-full font-inter text-[13px] font-semibold transition-all ${
                   isCompleted
-                    ? "bg-forest text-white cursor-pointer"
+                    ? "bg-forest text-white cursor-pointer hover:bg-forest-dark"
                     : isActive
-                      ? "bg-forest text-white"
+                      ? "bg-forest text-white ring-4 ring-forest/20"
                       : "bg-divider text-muted cursor-default"
                 }`}
                 aria-label={`Step ${step.id}: ${step.label}`}
                 disabled={!isCompleted}
               >
                 {isCompleted ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Check className="w-3.5 h-3.5" strokeWidth={3} />
                 ) : (
                   step.id
                 )}
               </button>
               <span
-                className={`font-inter text-[11px] sm:text-[12px] whitespace-nowrap ${
+                className={`font-inter text-[11px] sm:text-[12px] whitespace-nowrap text-center ${
                   isActive || isCompleted ? "font-semibold text-dark" : "text-muted"
                 }`}
               >
@@ -567,9 +611,9 @@ function StepIndicator({
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="font-inter text-[13px] font-medium text-text-label">
+    <Label className="font-inter text-[13px] font-medium text-text-label">
       {children}{required && <span className="text-saffron ml-0.5">*</span>}
-    </label>
+    </Label>
   );
 }
 
@@ -578,7 +622,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className="font-inter text-[12px] text-red-500 mt-1">{message}</p>;
 }
 
-function TextInput({
+function FormInput({
   value,
   onChange,
   placeholder,
@@ -593,21 +637,20 @@ function TextInput({
 }) {
   return (
     <>
-      <input
+      <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full h-11 px-3.5 border rounded-[8px] font-inter text-body-sm text-dark placeholder:text-placeholder bg-white transition-colors focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 ${
-          error ? "border-red-400" : "border-kaava-border"
-        }`}
+        aria-invalid={!!error}
+        className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder"
       />
       <FieldError message={error} />
     </>
   );
 }
 
-function SelectInput({
+function FormSelect({
   value,
   onChange,
   options,
@@ -622,24 +665,25 @@ function SelectInput({
 }) {
   return (
     <>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full h-11 px-3.5 border rounded-[8px] font-inter text-body-sm bg-white transition-colors focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_12px_center] bg-no-repeat pr-10 ${
-          !value ? "text-placeholder" : "text-dark"
-        } ${error ? "border-red-400" : "border-kaava-border"}`}
-      >
-        <option value="" disabled>{placeholder || "Select..."}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
-      </select>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          className="w-full !h-10 px-3.5 font-inter text-sm"
+          aria-invalid={!!error}
+        >
+          <SelectValue placeholder={placeholder || "Select..."} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <FieldError message={error} />
     </>
   );
 }
 
-function TextareaInput({
+function FormTextarea({
   value,
   onChange,
   placeholder,
@@ -654,14 +698,13 @@ function TextareaInput({
 }) {
   return (
     <>
-      <textarea
+      <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className={`w-full px-3.5 py-3 border rounded-[8px] font-inter text-body-sm text-dark placeholder:text-placeholder bg-white transition-colors focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 resize-none ${
-          error ? "border-red-400" : "border-kaava-border"
-        }`}
+        aria-invalid={!!error}
+        className="px-3.5 py-3 font-inter text-sm text-dark placeholder:text-placeholder resize-none"
       />
       <FieldError message={error} />
     </>
@@ -676,7 +719,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function SectionSubtitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="font-outfit text-body-lg font-semibold text-dark mb-4 mt-6 pb-2 border-b border-kaava-border">{children}</h3>
+    <h3 className="font-outfit text-body-lg font-semibold text-dark mb-4 mt-6 pb-2 border-b border-divider">{children}</h3>
   );
 }
 
@@ -724,13 +767,10 @@ function FileUpload({
     <div className="flex flex-col gap-1.5">
       <FieldLabel>{label}</FieldLabel>
       {file ? (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-green border border-border-green rounded-[8px]">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-green border border-border-green rounded-lg">
           <div className="flex items-center gap-2 min-w-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-            <span className="font-inter text-body-sm text-dark truncate">{file.name}</span>
+            <FileText className="w-[18px] h-[18px] text-forest shrink-0" />
+            <span className="font-inter text-sm text-dark truncate">{file.name}</span>
             <span className="font-inter text-[11px] text-muted shrink-0">({(file.size / 1024).toFixed(0)} KB)</span>
           </div>
           <button
@@ -738,10 +778,7 @@ function FileUpload({
             className="shrink-0 p-1 text-muted hover:text-red-500 transition-colors"
             aria-label="Remove file"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X className="w-4 h-4" />
           </button>
         </div>
       ) : (
@@ -750,19 +787,15 @@ function FileUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => inputRef.current?.click()}
-          className={`flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed rounded-[8px] cursor-pointer transition-colors ${
+          className={`flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
             isDragging
               ? "border-forest bg-forest/5"
               : error
                 ? "border-red-300 bg-red-50/50"
-                : "border-kaava-border hover:border-forest/40 hover:bg-surface-green/50"
+                : "border-divider hover:border-forest/40 hover:bg-surface-green/50"
           }`}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
+          <Upload className="w-6 h-6 text-muted" strokeWidth={1.5} />
           <p className="font-inter text-[13px] text-muted">
             Drag & drop or <span className="text-forest font-medium">browse</span>
           </p>
@@ -799,37 +832,40 @@ function Step1BusinessInfo({
   return (
     <div>
       <SectionTitle>Business Information</SectionTitle>
+      <p className="font-inter text-sm text-text-secondary mb-5 -mt-2">
+        Help us verify your business. This information will be used for invoicing and communication.
+      </p>
       <div className="flex flex-col gap-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
             <FieldLabel required>Business / Company Name</FieldLabel>
-            <TextInput value={formData.businessName} onChange={(v) => updateField("businessName", v)} placeholder="e.g., Kaava Naturals Pvt. Ltd." error={errors.businessName} />
+            <FormInput value={formData.businessName} onChange={(v) => updateField("businessName", v)} placeholder="e.g., Kaava Naturals Pvt. Ltd." error={errors.businessName} />
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel required>Business Type</FieldLabel>
-            <SelectInput value={formData.businessType} onChange={(v) => updateField("businessType", v)} options={BUSINESS_TYPES} placeholder="Select business type" error={errors.businessType} />
+            <FormSelect value={formData.businessType} onChange={(v) => updateField("businessType", v)} options={BUSINESS_TYPES} placeholder="Select business type" error={errors.businessType} />
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>Owner / Authorized Person Name</FieldLabel>
-          <TextInput value={formData.ownerName} onChange={(v) => updateField("ownerName", v)} placeholder="Full name of the authorized person" error={errors.ownerName} />
+          <FormInput value={formData.ownerName} onChange={(v) => updateField("ownerName", v)} placeholder="Full name of the authorized person" error={errors.ownerName} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
             <FieldLabel required>Email Address</FieldLabel>
-            <TextInput value={formData.email} onChange={(v) => updateField("email", v)} placeholder="business@example.com" type="email" error={errors.email} />
+            <FormInput value={formData.email} onChange={(v) => updateField("email", v)} placeholder="business@example.com" type="email" error={errors.email} />
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel required>Mobile Number</FieldLabel>
-            <TextInput value={formData.mobile} onChange={(v) => updateField("mobile", v.replace(/\D/g, "").slice(0, 10))} placeholder="10-digit mobile number" error={errors.mobile} />
+            <FormInput value={formData.mobile} onChange={(v) => updateField("mobile", v.replace(/\D/g, "").slice(0, 10))} placeholder="10-digit mobile number" error={errors.mobile} />
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5 md:w-1/2">
           <FieldLabel>Alternate Contact Number</FieldLabel>
-          <TextInput value={formData.alternateContact} onChange={(v) => updateField("alternateContact", v.replace(/\D/g, "").slice(0, 10))} placeholder="Optional" error={errors.alternateContact} />
+          <FormInput value={formData.alternateContact} onChange={(v) => updateField("alternateContact", v.replace(/\D/g, "").slice(0, 10))} placeholder="Optional" error={errors.alternateContact} />
         </div>
       </div>
     </div>
@@ -853,20 +889,20 @@ function AddressBlock({
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <FieldLabel required>Address Line</FieldLabel>
-        <TextareaInput value={address.addressLine} onChange={(v) => onUpdate(prefix, "addressLine", v)} placeholder="Building, Street, Area" rows={2} error={errors[`${prefix}.addressLine`]} />
+        <FormTextarea value={address.addressLine} onChange={(v) => onUpdate(prefix, "addressLine", v)} placeholder="Building, Street, Area" rows={2} error={errors[`${prefix}.addressLine`]} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>City</FieldLabel>
-          <TextInput value={address.city} onChange={(v) => onUpdate(prefix, "city", v)} placeholder="City" error={errors[`${prefix}.city`]} />
+          <FormInput value={address.city} onChange={(v) => onUpdate(prefix, "city", v)} placeholder="City" error={errors[`${prefix}.city`]} />
         </div>
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>State</FieldLabel>
-          <SelectInput value={address.state} onChange={(v) => onUpdate(prefix, "state", v)} options={INDIAN_STATES} placeholder="Select state" error={errors[`${prefix}.state`]} />
+          <FormSelect value={address.state} onChange={(v) => onUpdate(prefix, "state", v)} options={INDIAN_STATES} placeholder="Select state" error={errors[`${prefix}.state`]} />
         </div>
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>Pincode</FieldLabel>
-          <TextInput value={address.pincode} onChange={(v) => onUpdate(prefix, "pincode", v.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit pincode" error={errors[`${prefix}.pincode`]} />
+          <FormInput value={address.pincode} onChange={(v) => onUpdate(prefix, "pincode", v.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit pincode" error={errors[`${prefix}.pincode`]} />
         </div>
       </div>
     </div>
@@ -887,19 +923,21 @@ function Step2Addresses({
   return (
     <div>
       <SectionTitle>Addresses</SectionTitle>
+      <p className="font-inter text-sm text-text-secondary mb-5 -mt-2">
+        We need your registered and warehouse addresses for shipping logistics and GST compliance.
+      </p>
 
       <SectionSubtitle>Registered Business Address</SectionSubtitle>
       <AddressBlock prefix="registeredAddress" address={formData.registeredAddress} errors={errors} onUpdate={updateAddress} />
 
       <div className="mt-6 mb-4">
         <label className="flex items-center gap-3 cursor-pointer group">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={formData.warehouseSameAsRegistered}
-            onChange={(e) => updateField("warehouseSameAsRegistered", e.target.checked)}
-            className="h-[18px] w-[18px] rounded border-kaava-border text-forest focus:ring-forest/20 accent-forest"
+            onCheckedChange={(checked) => updateField("warehouseSameAsRegistered", checked === true)}
+            className="data-checked:bg-forest data-checked:border-forest"
           />
-          <span className="font-inter text-body-sm text-text-label group-hover:text-dark transition-colors">
+          <span className="font-inter text-sm text-text-label group-hover:text-dark transition-colors">
             Warehouse / Pickup address is same as registered address
           </span>
         </label>
@@ -931,13 +969,15 @@ function Step3BrandProducts({
   return (
     <div>
       <SectionTitle>Brand & Products</SectionTitle>
+      <p className="font-inter text-sm text-text-secondary mb-5 -mt-2">
+        Tell us about your brand and product range so we can set up your store correctly.
+      </p>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1.5">
           <FieldLabel required>Brand Name</FieldLabel>
-          <TextInput value={formData.brandName} onChange={(v) => updateField("brandName", v)} placeholder="Your brand name as it will appear on CheckVeda" error={errors.brandName} />
+          <FormInput value={formData.brandName} onChange={(v) => updateField("brandName", v)} placeholder="Your brand name as it will appear on CheckVeda" error={errors.brandName} />
         </div>
 
-        {/* Product Categories */}
         <div className="flex flex-col gap-2">
           <FieldLabel required>Product Categories</FieldLabel>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
@@ -946,17 +986,16 @@ function Step3BrandProducts({
               return (
                 <label
                   key={cat}
-                  className={`flex items-center gap-2 px-3 py-2.5 border rounded-[8px] cursor-pointer transition-all text-[13px] font-inter ${
+                  className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg cursor-pointer transition-all text-[13px] font-inter ${
                     selected
                       ? "border-forest bg-surface-green text-dark font-medium"
-                      : "border-kaava-border bg-white text-text-label hover:border-forest/30"
+                      : "border-divider bg-white text-text-label hover:border-forest/30"
                   }`}
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selected}
-                    onChange={() => toggleCategory(cat)}
-                    className="h-4 w-4 rounded border-kaava-border text-forest focus:ring-forest/20 accent-forest"
+                    onCheckedChange={() => toggleCategory(cat)}
+                    className="data-checked:bg-forest data-checked:border-forest"
                   />
                   {cat}
                 </label>
@@ -966,13 +1005,11 @@ function Step3BrandProducts({
           <FieldError message={errors.productCategories} />
         </div>
 
-        {/* Estimated Products */}
         <div className="flex flex-col gap-1.5 md:w-1/2">
           <FieldLabel required>Estimated Number of Products</FieldLabel>
-          <SelectInput value={formData.estimatedProducts} onChange={(v) => updateField("estimatedProducts", v)} options={PRODUCT_COUNT_OPTIONS} placeholder="Select range" error={errors.estimatedProducts} />
+          <FormSelect value={formData.estimatedProducts} onChange={(v) => updateField("estimatedProducts", v)} options={PRODUCT_COUNT_OPTIONS} placeholder="Select range" error={errors.estimatedProducts} />
         </div>
 
-        {/* Tier Selection */}
         <div className="flex flex-col gap-2">
           <FieldLabel required>Preferred Tier</FieldLabel>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -983,10 +1020,10 @@ function Step3BrandProducts({
                   key={tier.value}
                   type="button"
                   onClick={() => updateField("preferredTier", tier.value)}
-                  className={`flex flex-col items-start p-4 border-2 rounded-[12px] text-left transition-all ${
+                  className={`flex flex-col items-start p-4 border-2 rounded-xl text-left transition-all ${
                     selected
                       ? "border-forest bg-surface-green shadow-sm"
-                      : "border-kaava-border bg-white hover:border-forest/30"
+                      : "border-divider bg-white hover:border-forest/30"
                   }`}
                 >
                   <span className="font-outfit text-body-lg font-semibold text-dark">{tier.name}</span>
@@ -997,9 +1034,7 @@ function Step3BrandProducts({
                   </div>
                   {selected && (
                     <div className="mt-2 inline-flex items-center gap-1 bg-forest/10 text-forest font-inter text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                      <Check className="w-3 h-3" strokeWidth={3} />
                       Selected
                     </div>
                   )}
@@ -1010,20 +1045,19 @@ function Step3BrandProducts({
           <FieldError message={errors.preferredTier} />
         </div>
 
-        {/* Optional fields */}
         <div className="flex flex-col gap-1.5">
           <FieldLabel>Brief Business Description</FieldLabel>
-          <TextareaInput value={formData.businessDescription} onChange={(v) => updateField("businessDescription", v)} placeholder="Tell us about your brand, products, and what makes them unique" rows={3} />
+          <FormTextarea value={formData.businessDescription} onChange={(v) => updateField("businessDescription", v)} placeholder="Tell us about your brand, products, and what makes them unique" rows={3} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
             <FieldLabel>Website URL</FieldLabel>
-            <TextInput value={formData.websiteUrl} onChange={(v) => updateField("websiteUrl", v)} placeholder="https://www.yourbrand.com" />
+            <FormInput value={formData.websiteUrl} onChange={(v) => updateField("websiteUrl", v)} placeholder="https://www.yourbrand.com" />
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel>Social Media Links</FieldLabel>
-            <TextInput value={formData.socialMediaLinks} onChange={(v) => updateField("socialMediaLinks", v)} placeholder="Instagram, Facebook, etc." />
+            <FormInput value={formData.socialMediaLinks} onChange={(v) => updateField("socialMediaLinks", v)} placeholder="Instagram, Facebook, etc." />
           </div>
         </div>
       </div>
@@ -1049,11 +1083,14 @@ function Step4Documents({
   return (
     <div>
       <SectionTitle>Documents & Compliance</SectionTitle>
+      <p className="font-inter text-sm text-text-secondary mb-5 -mt-2">
+        Upload your business documents for verification. GSTIN and FSSAI details help us ensure marketplace compliance.
+      </p>
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
             <FieldLabel>GSTIN</FieldLabel>
-            <TextInput
+            <FormInput
               value={formData.gstin}
               onChange={(v) => updateField("gstin", v.toUpperCase().slice(0, 15))}
               placeholder="e.g., 22AAAAA0000A1Z5"
@@ -1062,7 +1099,7 @@ function Step4Documents({
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel>FSSAI License Number</FieldLabel>
-            <TextInput
+            <FormInput
               value={formData.fssaiLicense}
               onChange={(v) => updateField("fssaiLicense", v)}
               placeholder="14-digit FSSAI number"
@@ -1071,7 +1108,9 @@ function Step4Documents({
           </div>
         </div>
 
-        <div className="border-t border-kaava-border pt-5">
+        <Separator />
+
+        <div>
           <h3 className="font-outfit text-body-lg font-semibold text-dark mb-4">Upload Documents</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {DOC_TYPES.map((doc) => (
@@ -1105,22 +1144,19 @@ function ReviewCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-border-green rounded-[12px] bg-surface-green/30 overflow-hidden">
+    <Card className="border-0 ring-1 ring-border-green overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 bg-surface-green border-b border-border-green">
         <h3 className="font-outfit text-body font-semibold text-dark">{title}</h3>
         <button
           onClick={() => onEdit(step)}
           className="inline-flex items-center gap-1 font-inter text-[12px] font-semibold text-forest hover:text-forest-dark transition-colors"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
+          <Pencil className="w-3.5 h-3.5" />
           Edit
         </button>
       </div>
-      <div className="px-5 py-4">{children}</div>
-    </div>
+      <CardContent className="px-5 py-4">{children}</CardContent>
+    </Card>
   );
 }
 
@@ -1129,7 +1165,7 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col sm:flex-row sm:gap-4 py-1.5">
       <span className="font-inter text-[12px] text-muted sm:w-44 shrink-0">{label}</span>
-      <span className="font-inter text-body-sm text-dark">{value}</span>
+      <span className="font-inter text-sm text-dark">{value}</span>
     </div>
   );
 }
@@ -1163,14 +1199,13 @@ function Step5Review({
   return (
     <div>
       <SectionTitle>Review Your Application</SectionTitle>
-      <p className="font-inter text-body-sm text-muted mb-6">
+      <p className="font-inter text-sm text-muted mb-6">
         Please review all the information below before submitting your application.
       </p>
 
       <div className="flex flex-col gap-4">
-        {/* Business Info */}
         <ReviewCard title="Business Information" step={1} onEdit={onEditStep}>
-          <div className="flex flex-col divide-y divide-kaava-border">
+          <div className="flex flex-col divide-y divide-divider">
             <ReviewRow label="Business Name" value={formData.businessName} />
             <ReviewRow label="Business Type" value={formData.businessType} />
             <ReviewRow label="Owner Name" value={formData.ownerName} />
@@ -1180,25 +1215,23 @@ function Step5Review({
           </div>
         </ReviewCard>
 
-        {/* Addresses */}
         <ReviewCard title="Addresses" step={2} onEdit={onEditStep}>
           <div className="flex flex-col gap-3">
             <div>
               <p className="font-inter text-[12px] text-muted mb-1">Registered Address</p>
-              <p className="font-inter text-body-sm text-dark">{formatAddress(formData.registeredAddress)}</p>
+              <p className="font-inter text-sm text-dark">{formatAddress(formData.registeredAddress)}</p>
             </div>
             <div>
               <p className="font-inter text-[12px] text-muted mb-1">Warehouse / Pickup Address</p>
-              <p className="font-inter text-body-sm text-dark">
+              <p className="font-inter text-sm text-dark">
                 {formData.warehouseSameAsRegistered ? "Same as registered address" : formatAddress(warehouseAddr)}
               </p>
             </div>
           </div>
         </ReviewCard>
 
-        {/* Brand & Products */}
         <ReviewCard title="Brand & Products" step={3} onEdit={onEditStep}>
-          <div className="flex flex-col divide-y divide-kaava-border">
+          <div className="flex flex-col divide-y divide-divider">
             <ReviewRow label="Brand Name" value={formData.brandName} />
             <ReviewRow label="Categories" value={formData.productCategories.join(", ")} />
             <ReviewRow label="Est. Products" value={formData.estimatedProducts} />
@@ -1209,9 +1242,8 @@ function Step5Review({
           </div>
         </ReviewCard>
 
-        {/* Documents */}
         <ReviewCard title="Documents & Compliance" step={4} onEdit={onEditStep}>
-          <div className="flex flex-col divide-y divide-kaava-border">
+          <div className="flex flex-col divide-y divide-divider">
             <ReviewRow label="GSTIN" value={formData.gstin} />
             <ReviewRow label="FSSAI License" value={formData.fssaiLicense} />
             {uploadedDocs.length > 0 && (
@@ -1220,10 +1252,7 @@ function Step5Review({
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {uploadedDocs.map(([key, file]) => (
                     <span key={key} className="inline-flex items-center gap-1.5 bg-white border border-border-green rounded-full px-3 py-1 font-inter text-[12px] text-dark">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
+                      <FileText className="w-3 h-3 text-forest" />
                       {file!.name}
                     </span>
                   ))}
@@ -1234,20 +1263,12 @@ function Step5Review({
         </ReviewCard>
       </div>
 
-      {/* Consent */}
-      <div className="mt-6 p-4 bg-surface border border-kaava-border rounded-[12px]">
+      <div className="mt-6 p-4 bg-surface rounded-xl ring-1 ring-foreground/10">
         <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={consentChecked}
-            onChange={(e) => {
-              onConsentChange(e.target.checked);
-              if (e.target.checked) {
-                // Clear consent error on check
-                // (handled via parent)
-              }
-            }}
-            className="h-[18px] w-[18px] mt-0.5 rounded border-kaava-border text-forest focus:ring-forest/20 accent-forest shrink-0"
+            onCheckedChange={(checked) => onConsentChange(checked === true)}
+            className="mt-0.5 data-checked:bg-forest data-checked:border-forest"
           />
           <span className="font-inter text-[13px] text-text-label leading-relaxed">
             I agree to CheckVeda&apos;s{" "}
