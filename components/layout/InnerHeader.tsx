@@ -68,13 +68,13 @@ export default function InnerHeader() {
           <div className="flex items-center" style={{ gap: 12 }}>
             <MobileNav cartItemCount={totalItems} onCartClick={openDrawer} />
             <Link href="/" className="hidden lg:flex items-center">
-              <img src="/kaava-logo-text.png" alt="Kaava" className="h-10 w-auto" />
+              <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-10 w-auto" />
             </Link>
           </div>
 
           {/* CENTER: Logo on mobile, Search bar on desktop */}
           <Link href="/" className="lg:hidden flex items-center absolute left-1/2 -translate-x-1/2">
-            <img src="/kaava-logo-text.png" alt="Kaava" className="h-7 w-auto" />
+            <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-7 w-auto" />
           </Link>
           <div
             className="search-container hidden lg:flex items-center bg-white transition-shadow"

@@ -113,13 +113,13 @@ export default function UnifiedHero() {
             <MobileNav cartItemCount={totalItems} onCartClick={openDrawer} />
             {/* Logo — desktop: normal, hidden on mobile (centered logo below) */}
             <Link href="/" className="hidden lg:flex items-center">
-              <img src="/kaava-logo-text.png" alt="Kaava" className="h-10 w-auto" />
+              <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-10 w-auto" />
             </Link>
           </div>
 
           {/* Center: logo on mobile, nav menu on desktop */}
           <Link href="/" className="lg:hidden flex items-center absolute left-1/2 -translate-x-1/2">
-            <img src="/kaava-logo-text.png" alt="Kaava" className="h-7 w-auto" />
+            <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-7 w-auto" />
           </Link>
           <div className="hidden lg:flex items-center">
             <MegaNav />

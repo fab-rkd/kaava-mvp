@@ -18,7 +18,7 @@ export default function Footer() {
           {/* ── Column 1: Brand ── */}
           <div>
             <div className="mb-2">
-              <img src="/kaava-logo-text.png" alt="Kaava" className="h-9 w-auto brightness-100" />
+              <img src="/checkveda-logo-footer.png" alt="CheckVeda" className="h-9 w-auto brightness-100" />
             </div>
             <p className="text-sm text-white/70 font-inter mb-4">
               India&apos;s Verified Ayurveda Marketplace

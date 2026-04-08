@@ -516,7 +516,7 @@ function OnboardingHeader() {
     <header className="w-full bg-forest" style={{ height: 72 }}>
       <div className="content-container flex items-center justify-between h-full">
         <Link href="/" className="flex items-center">
-          <span className="font-outfit text-[22px] font-bold text-white tracking-tight">CheckVeda</span>
+          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-8 w-auto" />
         </Link>
         <span className="font-inter text-[14px] text-white/85">Vendor Onboarding</span>
       </div>
