@@ -964,21 +964,22 @@ function Step3BrandProducts({
   toggleCategory: (cat: string) => void;
 }) {
   const hasOther = formData.productCategories.includes("Other");
+  const socialLinks = Array.isArray(formData.socialMediaLinks) ? formData.socialMediaLinks : [""];
 
   function updateSocialLink(index: number, value: string) {
-    const updated = [...formData.socialMediaLinks];
+    const updated = [...socialLinks];
     updated[index] = value;
     updateField("socialMediaLinks", updated);
   }
 
   function addSocialLink() {
-    if (formData.socialMediaLinks.length < 4) {
-      updateField("socialMediaLinks", [...formData.socialMediaLinks, ""]);
+    if (socialLinks.length < 4) {
+      updateField("socialMediaLinks", [...socialLinks, ""]);
     }
   }
 
   function removeSocialLink(index: number) {
-    const updated = formData.socialMediaLinks.filter((_, i) => i !== index);
+    const updated = socialLinks.filter((_, i) => i !== index);
     updateField("socialMediaLinks", updated.length === 0 ? [""] : updated);
   }
 
@@ -1051,7 +1052,7 @@ function Step3BrandProducts({
         <div className="flex flex-col gap-2">
           <FieldLabel>Social Media Links</FieldLabel>
           <div className="flex flex-col gap-2.5">
-            {formData.socialMediaLinks.map((link, index) => (
+            {socialLinks.map((link, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Input
                   value={link}
@@ -1059,7 +1060,7 @@ function Step3BrandProducts({
                   placeholder={index === 0 ? "https://instagram.com/yourbrand" : "https://..."}
                   className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder flex-1"
                 />
-                {formData.socialMediaLinks.length > 1 && (
+                {socialLinks.length > 1 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -1073,7 +1074,7 @@ function Step3BrandProducts({
               </div>
             ))}
           </div>
-          {formData.socialMediaLinks.length < 4 && (
+          {socialLinks.length < 4 && (
             <button
               type="button"
               onClick={addSocialLink}
@@ -1264,7 +1265,7 @@ function Step5Review({
             <ReviewRow label="Est. Products" value={formData.estimatedProducts} />
             <ReviewRow label="Description" value={formData.businessDescription} />
             <ReviewRow label="Website" value={formData.websiteUrl} />
-            <ReviewRow label="Social Media" value={formData.socialMediaLinks.filter(Boolean).join(", ")} />
+            <ReviewRow label="Social Media" value={(Array.isArray(formData.socialMediaLinks) ? formData.socialMediaLinks : []).filter(Boolean).join(", ")} />
           </div>
         </ReviewCard>
 
