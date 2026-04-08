@@ -101,6 +101,12 @@ interface FormData {
   // Step 4
   gstin: string;
   fssaiLicense: string;
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  confirmAccountNumber: string;
+  ifscCode: string;
+  accountType: string;
 }
 
 type FileState = Record<string, File | null>;
@@ -137,6 +143,12 @@ const initialFormData: FormData = {
   socialMediaLinks: [""],
   gstin: "",
   fssaiLicense: "",
+  accountHolderName: "",
+  bankName: "",
+  accountNumber: "",
+  confirmAccountNumber: "",
+  ifscCode: "",
+  accountType: "",
 };
 
 // ─── Page Component ───────────────────────────────────────────────────────────
@@ -273,6 +285,25 @@ export default function VendorOnboardingPage() {
       if (formData.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/.test(formData.gstin.toUpperCase())) {
         newErrors.gstin = "Enter a valid GSTIN (e.g., 22AAAAA0000A1Z5)";
       }
+      // Bank details validation
+      if (!formData.accountHolderName.trim()) newErrors.accountHolderName = "Account holder name is required";
+      if (!formData.bankName.trim()) newErrors.bankName = "Bank name is required";
+      if (!formData.accountNumber.trim()) {
+        newErrors.accountNumber = "Account number is required";
+      } else if (!/^\d{9,18}$/.test(formData.accountNumber)) {
+        newErrors.accountNumber = "Enter a valid account number (9-18 digits)";
+      }
+      if (!formData.confirmAccountNumber.trim()) {
+        newErrors.confirmAccountNumber = "Please confirm your account number";
+      } else if (formData.accountNumber !== formData.confirmAccountNumber) {
+        newErrors.confirmAccountNumber = "Account numbers do not match";
+      }
+      if (!formData.ifscCode.trim()) {
+        newErrors.ifscCode = "IFSC code is required";
+      } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode.toUpperCase())) {
+        newErrors.ifscCode = "Enter a valid IFSC code (e.g., SBIN0001234)";
+      }
+      if (!formData.accountType) newErrors.accountType = "Select account type";
     }
 
     setErrors(newErrors);
@@ -1109,7 +1140,7 @@ function Step4Documents({
     <div>
       <SectionTitle>Documents & Compliance</SectionTitle>
       <p className="font-inter text-sm text-text-secondary mb-5 -mt-2">
-        Upload your business documents for verification. GSTIN and FSSAI details help us ensure marketplace compliance.
+        Upload your business documents and bank details for verification and payouts.
       </p>
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1148,6 +1179,78 @@ function Step4Documents({
                 onFileSelect={onFileSelect}
               />
             ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 className="font-outfit text-body-lg font-semibold text-dark mb-1">Bank Account Details</h3>
+          <p className="font-inter text-[13px] text-text-secondary mb-4">Required for processing vendor payouts. Your details are stored securely.</p>
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Account Holder Name</FieldLabel>
+                <FormInput
+                  value={formData.accountHolderName}
+                  onChange={(v) => updateField("accountHolderName", v)}
+                  placeholder="As per bank records"
+                  error={errors.accountHolderName}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Bank Name</FieldLabel>
+                <FormInput
+                  value={formData.bankName}
+                  onChange={(v) => updateField("bankName", v)}
+                  placeholder="e.g., State Bank of India"
+                  error={errors.bankName}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Account Number</FieldLabel>
+                <FormInput
+                  value={formData.accountNumber}
+                  onChange={(v) => updateField("accountNumber", v.replace(/\D/g, "").slice(0, 18))}
+                  placeholder="9 to 18 digit account number"
+                  error={errors.accountNumber}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Confirm Account Number</FieldLabel>
+                <FormInput
+                  value={formData.confirmAccountNumber}
+                  onChange={(v) => updateField("confirmAccountNumber", v.replace(/\D/g, "").slice(0, 18))}
+                  placeholder="Re-enter account number"
+                  error={errors.confirmAccountNumber}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>IFSC Code</FieldLabel>
+                <FormInput
+                  value={formData.ifscCode}
+                  onChange={(v) => updateField("ifscCode", v.toUpperCase().slice(0, 11))}
+                  placeholder="e.g., SBIN0001234"
+                  error={errors.ifscCode}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Account Type</FieldLabel>
+                <FormSelect
+                  value={formData.accountType}
+                  onChange={(v) => updateField("accountType", v)}
+                  options={["Savings", "Current"]}
+                  placeholder="Select account type"
+                  error={errors.accountType}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1286,6 +1389,11 @@ function Step5Review({
                 </div>
               </div>
             )}
+            <ReviewRow label="Account Holder" value={formData.accountHolderName} />
+            <ReviewRow label="Bank Name" value={formData.bankName} />
+            <ReviewRow label="Account Number" value={formData.accountNumber ? `****${formData.accountNumber.slice(-4)}` : ""} />
+            <ReviewRow label="IFSC Code" value={formData.ifscCode} />
+            <ReviewRow label="Account Type" value={formData.accountType} />
           </div>
         </ReviewCard>
       </div>
