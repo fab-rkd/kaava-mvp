@@ -8,7 +8,7 @@
 
 import { useState, useCallback, useRef, type ChangeEvent, type DragEvent } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, Upload, FileText, X, Pencil, Loader2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Upload, FileText, X, Pencil, Loader2, Plus, Trash2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,14 +59,6 @@ const PRODUCT_CATEGORIES = [
 
 const PRODUCT_COUNT_OPTIONS = ["1-3", "4-10", "11-50", "51-100", "100+"] as const;
 
-const TIER_OPTIONS = [
-  { name: "Free / Trial", price: "₹0/mo", commission: "18-20%", products: "Up to 3 products", value: "free" },
-  { name: "Starter", price: "₹2,999/mo", commission: "10-12%", products: "Up to 10 products", value: "starter" },
-  { name: "Growth", price: "₹4,999/mo", commission: "6-8%", products: "Up to 100 products", value: "growth" },
-  { name: "Enterprise", price: "₹10,000/mo", commission: "3-5%", products: "Unlimited products", value: "enterprise" },
-  { name: "Commission Only", price: "₹0/mo", commission: "20-25%", products: "Up to 20 products", value: "commission_only" },
-] as const;
-
 const DOC_TYPES = [
   { key: "gstCertificate", label: "GST Certificate", required: false },
   { key: "fssaiCertificate", label: "FSSAI Certificate", required: false },
@@ -101,11 +93,11 @@ interface FormData {
   // Step 3
   brandName: string;
   productCategories: string[];
+  otherCategory: string;
   estimatedProducts: string;
-  preferredTier: string;
   businessDescription: string;
   websiteUrl: string;
-  socialMediaLinks: string;
+  socialMediaLinks: string[];
   // Step 4
   gstin: string;
   fssaiLicense: string;
@@ -138,11 +130,11 @@ const initialFormData: FormData = {
   warehouseAddress: { ...emptyAddress },
   brandName: "",
   productCategories: [],
+  otherCategory: "",
   estimatedProducts: "",
-  preferredTier: "",
   businessDescription: "",
   websiteUrl: "",
-  socialMediaLinks: "",
+  socialMediaLinks: [""],
   gstin: "",
   fssaiLicense: "",
 };
@@ -271,8 +263,10 @@ export default function VendorOnboardingPage() {
     if (step === 3) {
       if (!formData.brandName.trim()) newErrors.brandName = "Brand name is required";
       if (formData.productCategories.length === 0) newErrors.productCategories = "Select at least one category";
+      if (formData.productCategories.includes("Other") && !formData.otherCategory.trim()) {
+        newErrors.otherCategory = "Please specify your category";
+      }
       if (!formData.estimatedProducts) newErrors.estimatedProducts = "Select estimated number of products";
-      if (!formData.preferredTier) newErrors.preferredTier = "Select a preferred tier";
     }
 
     if (step === 4) {
@@ -401,9 +395,12 @@ export default function VendorOnboardingPage() {
               <p className="font-inter text-body-lg font-semibold text-dark font-mono tracking-wide">{applicationId}</p>
             </CardContent>
           </Card>
-          <Button asChild className="h-12 px-8 bg-forest text-white hover:bg-forest-dark font-inter text-body font-semibold">
-            <Link href="/">Back to Home</Link>
-          </Button>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center h-12 px-8 bg-forest text-white font-inter text-body font-semibold rounded-lg hover:bg-forest-dark transition-colors"
+          >
+            Back to Home
+          </Link>
         </div>
       </div>
     );
@@ -665,7 +662,7 @@ function FormSelect({
 }) {
   return (
     <>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={(v) => { if (v !== null) onChange(v); }}>
         <SelectTrigger
           className="w-full !h-10 px-3.5 font-inter text-sm"
           aria-invalid={!!error}
@@ -966,6 +963,25 @@ function Step3BrandProducts({
   updateField: <K extends keyof FormData>(key: K, value: FormData[K]) => void;
   toggleCategory: (cat: string) => void;
 }) {
+  const hasOther = formData.productCategories.includes("Other");
+
+  function updateSocialLink(index: number, value: string) {
+    const updated = [...formData.socialMediaLinks];
+    updated[index] = value;
+    updateField("socialMediaLinks", updated);
+  }
+
+  function addSocialLink() {
+    if (formData.socialMediaLinks.length < 4) {
+      updateField("socialMediaLinks", [...formData.socialMediaLinks, ""]);
+    }
+  }
+
+  function removeSocialLink(index: number) {
+    const updated = formData.socialMediaLinks.filter((_, i) => i !== index);
+    updateField("socialMediaLinks", updated.length === 0 ? [""] : updated);
+  }
+
   return (
     <div>
       <SectionTitle>Brand & Products</SectionTitle>
@@ -1003,6 +1019,18 @@ function Step3BrandProducts({
             })}
           </div>
           <FieldError message={errors.productCategories} />
+
+          {hasOther && (
+            <div className="flex flex-col gap-1.5 mt-2">
+              <FieldLabel required>Please specify your category</FieldLabel>
+              <FormInput
+                value={formData.otherCategory}
+                onChange={(v) => updateField("otherCategory", v)}
+                placeholder="e.g., Pet Wellness, Sports Nutrition"
+                error={errors.otherCategory}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5 md:w-1/2">
@@ -1010,55 +1038,51 @@ function Step3BrandProducts({
           <FormSelect value={formData.estimatedProducts} onChange={(v) => updateField("estimatedProducts", v)} options={PRODUCT_COUNT_OPTIONS} placeholder="Select range" error={errors.estimatedProducts} />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <FieldLabel required>Preferred Tier</FieldLabel>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {TIER_OPTIONS.map((tier) => {
-              const selected = formData.preferredTier === tier.value;
-              return (
-                <button
-                  key={tier.value}
-                  type="button"
-                  onClick={() => updateField("preferredTier", tier.value)}
-                  className={`flex flex-col items-start p-4 border-2 rounded-xl text-left transition-all ${
-                    selected
-                      ? "border-forest bg-surface-green shadow-sm"
-                      : "border-divider bg-white hover:border-forest/30"
-                  }`}
-                >
-                  <span className="font-outfit text-body-lg font-semibold text-dark">{tier.name}</span>
-                  <span className="font-inter text-[20px] font-bold text-forest mt-1">{tier.price}</span>
-                  <div className="flex flex-col gap-0.5 mt-2">
-                    <span className="font-inter text-[12px] text-text-secondary">Commission: {tier.commission}</span>
-                    <span className="font-inter text-[12px] text-text-secondary">{tier.products}</span>
-                  </div>
-                  {selected && (
-                    <div className="mt-2 inline-flex items-center gap-1 bg-forest/10 text-forest font-inter text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                      <Check className="w-3 h-3" strokeWidth={3} />
-                      Selected
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <FieldError message={errors.preferredTier} />
-        </div>
-
         <div className="flex flex-col gap-1.5">
           <FieldLabel>Brief Business Description</FieldLabel>
           <FormTextarea value={formData.businessDescription} onChange={(v) => updateField("businessDescription", v)} placeholder="Tell us about your brand, products, and what makes them unique" rows={3} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Website URL</FieldLabel>
-            <FormInput value={formData.websiteUrl} onChange={(v) => updateField("websiteUrl", v)} placeholder="https://www.yourbrand.com" />
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel>Website URL</FieldLabel>
+          <FormInput value={formData.websiteUrl} onChange={(v) => updateField("websiteUrl", v)} placeholder="https://www.yourbrand.com" />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <FieldLabel>Social Media Links</FieldLabel>
+          <div className="flex flex-col gap-2.5">
+            {formData.socialMediaLinks.map((link, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  value={link}
+                  onChange={(e) => updateSocialLink(index, e.target.value)}
+                  placeholder={index === 0 ? "https://instagram.com/yourbrand" : "https://..."}
+                  className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder flex-1"
+                />
+                {formData.socialMediaLinks.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeSocialLink(index)}
+                    className="shrink-0 text-muted hover:text-red-500"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Social Media Links</FieldLabel>
-            <FormInput value={formData.socialMediaLinks} onChange={(v) => updateField("socialMediaLinks", v)} placeholder="Instagram, Facebook, etc." />
-          </div>
+          {formData.socialMediaLinks.length < 4 && (
+            <button
+              type="button"
+              onClick={addSocialLink}
+              className="inline-flex items-center gap-1.5 font-inter text-[13px] font-medium text-forest hover:text-forest-dark transition-colors self-start mt-1"
+            >
+              <Plus className="w-4 h-4" />
+              Add another link
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -1185,7 +1209,6 @@ function Step5Review({
   onConsentChange: (val: boolean) => void;
   onEditStep: (step: number) => void;
 }) {
-  const selectedTier = TIER_OPTIONS.find((t) => t.value === formData.preferredTier);
   const warehouseAddr = formData.warehouseSameAsRegistered
     ? formData.registeredAddress
     : formData.warehouseAddress;
@@ -1233,12 +1256,15 @@ function Step5Review({
         <ReviewCard title="Brand & Products" step={3} onEdit={onEditStep}>
           <div className="flex flex-col divide-y divide-divider">
             <ReviewRow label="Brand Name" value={formData.brandName} />
-            <ReviewRow label="Categories" value={formData.productCategories.join(", ")} />
+            <ReviewRow label="Categories" value={
+              formData.productCategories
+                .map((c) => c === "Other" && formData.otherCategory ? `Other (${formData.otherCategory})` : c)
+                .join(", ")
+            } />
             <ReviewRow label="Est. Products" value={formData.estimatedProducts} />
-            <ReviewRow label="Preferred Tier" value={selectedTier ? `${selectedTier.name} (${selectedTier.price})` : ""} />
             <ReviewRow label="Description" value={formData.businessDescription} />
             <ReviewRow label="Website" value={formData.websiteUrl} />
-            <ReviewRow label="Social Media" value={formData.socialMediaLinks} />
+            <ReviewRow label="Social Media" value={formData.socialMediaLinks.filter(Boolean).join(", ")} />
           </div>
         </ReviewCard>
 
