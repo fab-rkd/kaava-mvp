@@ -5,7 +5,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <header className="bg-[#1B4D3E]" style={{ height: 90, paddingBottom: 15 }}>
-        <div className="max-w-3xl mx-auto px-6 flex items-center justify-center h-full">
+        <div className="content-container flex items-center justify-center h-full">
           <Link href="/">
             <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
           </Link>
@@ -17,7 +17,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
 
       {/* Footer */}
       <footer className="bg-[#1B1B1B] text-white">
-        <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="content-container py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {/* Left — Brand & Info */}
             <div>
