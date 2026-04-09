@@ -51,11 +51,26 @@ const INDIAN_STATES = [
   "West Bengal", "Delhi", "Chandigarh", "Puducherry", "Jammu & Kashmir", "Ladakh",
 ] as const;
 
-const PRODUCT_CATEGORIES = [
+const PRODUCT_TYPES = ["Herbal Medicine", "Organic Food", "Both"] as const;
+
+const HERBAL_CATEGORIES = [
   "Hair Care", "Skin Care", "Body Care", "Oral Care",
   "Immunity & Wellness", "Digestive Health", "Women's Health", "Men's Health",
   "Eye Care", "Aromatherapy", "Baby Care", "Other",
 ] as const;
+
+const ORGANIC_CATEGORIES = [
+  "Ghee & Dairy", "Flours & Atta", "Rice & Grains", "Cold-Pressed Oils",
+  "Spices & Masala", "Honey & Sweeteners", "Pulses & Lentils", "Dry Fruits & Nuts",
+  "Organic Snacks", "Beverages", "Other",
+] as const;
+
+function getCategories(productType: string): readonly string[] {
+  if (productType === "Herbal Medicine") return HERBAL_CATEGORIES;
+  if (productType === "Organic Food") return ORGANIC_CATEGORIES;
+  if (productType === "Both") return [...new Set([...HERBAL_CATEGORIES, ...ORGANIC_CATEGORIES])];
+  return [];
+}
 
 const PRODUCT_COUNT_OPTIONS = ["1-3", "4-10", "11-50", "51-100", "100+"] as const;
 
@@ -92,6 +107,7 @@ interface FormData {
   warehouseAddress: AddressFields;
   // Step 3
   brandName: string;
+  productType: string;
   productCategories: string[];
   otherCategory: string;
   estimatedProducts: string;
@@ -135,6 +151,7 @@ const initialFormData: FormData = {
   warehouseSameAsRegistered: false,
   warehouseAddress: { ...emptyAddress },
   brandName: "",
+  productType: "",
   productCategories: [],
   otherCategory: "",
   estimatedProducts: "",
@@ -274,6 +291,7 @@ export default function VendorOnboardingPage() {
 
     if (step === 3) {
       if (!formData.brandName.trim()) newErrors.brandName = "Brand name is required";
+      if (!formData.productType) newErrors.productType = "Select a product type";
       if (formData.productCategories.length === 0) newErrors.productCategories = "Select at least one category";
       if (formData.productCategories.includes("Other") && !formData.otherCategory.trim()) {
         newErrors.otherCategory = "Please specify your category";
@@ -996,6 +1014,7 @@ function Step3BrandProducts({
 }) {
   const hasOther = formData.productCategories.includes("Other");
   const socialLinks = Array.isArray(formData.socialMediaLinks) ? formData.socialMediaLinks : [""];
+  const availableCategories = getCategories(formData.productType);
 
   function updateSocialLink(index: number, value: string) {
     const updated = [...socialLinks];
@@ -1027,9 +1046,40 @@ function Step3BrandProducts({
         </div>
 
         <div className="flex flex-col gap-2">
+          <FieldLabel required>Product Type</FieldLabel>
+          <div className="flex flex-wrap gap-3">
+            {PRODUCT_TYPES.map((type) => {
+              const selected = formData.productType === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    updateField("productType", type);
+                    // Clear categories that don't belong to the new type
+                    const newCats = getCategories(type);
+                    const filtered = formData.productCategories.filter((c) => newCats.includes(c));
+                    updateField("productCategories", filtered);
+                  }}
+                  className={`px-5 py-2.5 rounded-lg font-inter text-sm font-medium border-2 transition-all ${
+                    selected
+                      ? "border-forest bg-surface-green text-dark"
+                      : "border-divider bg-white text-text-label hover:border-forest/30"
+                  }`}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+          <FieldError message={errors.productType} />
+        </div>
+
+        {formData.productType && (
+        <div className="flex flex-col gap-2">
           <FieldLabel required>Product Categories</FieldLabel>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-            {PRODUCT_CATEGORIES.map((cat) => {
+            {availableCategories.map((cat) => {
               const selected = formData.productCategories.includes(cat);
               return (
                 <label
@@ -1064,6 +1114,7 @@ function Step3BrandProducts({
             </div>
           )}
         </div>
+        )}
 
         <div className="flex flex-col gap-1.5 md:w-1/2">
           <FieldLabel required>Estimated Number of Products</FieldLabel>
@@ -1136,6 +1187,34 @@ function Step4Documents({
   files: FileState;
   onFileSelect: (key: string, file: File | null) => void;
 }) {
+  const [ifscLookup, setIfscLookup] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [ifscBranch, setIfscBranch] = useState("");
+
+  async function lookupIfsc(code: string) {
+    updateField("ifscCode", code.toUpperCase().slice(0, 11));
+    if (code.length !== 11) {
+      setIfscLookup("idle");
+      setIfscBranch("");
+      return;
+    }
+    setIfscLookup("loading");
+    try {
+      const res = await fetch(`https://ifsc.razorpay.com/${code.toUpperCase()}`);
+      if (res.ok) {
+        const data = await res.json();
+        updateField("bankName", data.BANK || "");
+        setIfscBranch(data.BRANCH || "");
+        setIfscLookup("success");
+      } else {
+        setIfscLookup("error");
+        setIfscBranch("");
+      }
+    } catch {
+      setIfscLookup("error");
+      setIfscBranch("");
+    }
+  }
+
   return (
     <div>
       <SectionTitle>Documents & Compliance</SectionTitle>
@@ -1188,25 +1267,14 @@ function Step4Documents({
           <h3 className="font-outfit text-body-lg font-semibold text-dark mb-1">Bank Account Details</h3>
           <p className="font-inter text-[13px] text-text-secondary mb-4">Required for processing vendor payouts. Your details are stored securely.</p>
           <div className="flex flex-col gap-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel required>Account Holder Name</FieldLabel>
-                <FormInput
-                  value={formData.accountHolderName}
-                  onChange={(v) => updateField("accountHolderName", v)}
-                  placeholder="As per bank records"
-                  error={errors.accountHolderName}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel required>Bank Name</FieldLabel>
-                <FormInput
-                  value={formData.bankName}
-                  onChange={(v) => updateField("bankName", v)}
-                  placeholder="e.g., State Bank of India"
-                  error={errors.bankName}
-                />
-              </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel required>Account Holder Name</FieldLabel>
+              <FormInput
+                value={formData.accountHolderName}
+                onChange={(v) => updateField("accountHolderName", v)}
+                placeholder="As per bank records"
+                error={errors.accountHolderName}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1233,23 +1301,49 @@ function Step4Documents({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="flex flex-col gap-1.5">
                 <FieldLabel required>IFSC Code</FieldLabel>
-                <FormInput
-                  value={formData.ifscCode}
-                  onChange={(v) => updateField("ifscCode", v.toUpperCase().slice(0, 11))}
-                  placeholder="e.g., SBIN0001234"
-                  error={errors.ifscCode}
-                />
+                <div className="relative">
+                  <Input
+                    value={formData.ifscCode}
+                    onChange={(e) => lookupIfsc(e.target.value)}
+                    placeholder="e.g., SBIN0001234"
+                    aria-invalid={!!errors.ifscCode}
+                    className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder pr-10"
+                  />
+                  {ifscLookup === "loading" && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted animate-spin" />
+                  )}
+                  {ifscLookup === "success" && (
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-forest" />
+                  )}
+                </div>
+                <FieldError message={errors.ifscCode} />
+                {ifscLookup === "error" && formData.ifscCode.length === 11 && (
+                  <p className="font-inter text-[12px] text-red-500 mt-0.5">Invalid IFSC code — please check and re-enter</p>
+                )}
+                {ifscBranch && (
+                  <p className="font-inter text-[12px] text-forest mt-0.5">Branch: {ifscBranch}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <FieldLabel required>Account Type</FieldLabel>
-                <FormSelect
-                  value={formData.accountType}
-                  onChange={(v) => updateField("accountType", v)}
-                  options={["Savings", "Current"]}
-                  placeholder="Select account type"
-                  error={errors.accountType}
+                <FieldLabel required>Bank Name</FieldLabel>
+                <FormInput
+                  value={formData.bankName}
+                  onChange={(v) => updateField("bankName", v)}
+                  placeholder={ifscLookup === "loading" ? "Looking up..." : "Auto-filled from IFSC or enter manually"}
+                  error={errors.bankName}
                 />
               </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5 md:w-1/2">
+              <FieldLabel required>Account Type</FieldLabel>
+              <FormSelect
+                value={formData.accountType}
+                onChange={(v) => updateField("accountType", v)}
+                options={["Savings", "Current"]}
+                placeholder="Select account type"
+                error={errors.accountType}
+              />
             </div>
           </div>
         </div>
@@ -1360,6 +1454,7 @@ function Step5Review({
         <ReviewCard title="Brand & Products" step={3} onEdit={onEditStep}>
           <div className="flex flex-col divide-y divide-divider">
             <ReviewRow label="Brand Name" value={formData.brandName} />
+            <ReviewRow label="Product Type" value={formData.productType} />
             <ReviewRow label="Categories" value={
               formData.productCategories
                 .map((c) => c === "Other" && formData.otherCategory ? `Other (${formData.otherCategory})` : c)
