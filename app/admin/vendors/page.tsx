@@ -120,10 +120,8 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="min-h-screen bg-[#F8FBF8] flex flex-col">
       {/* Header */}
-      <div className="bg-[#2D6A4F] px-6 py-4">
-        <h1 className="font-outfit text-white text-xl font-semibold tracking-tight">
-          CheckVeda Admin
-        </h1>
+      <div className="bg-[#1B4D3E] flex items-center justify-center" style={{ height: 90, paddingBottom: 15 }}>
+        <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
       </div>
 
       {/* Login Card */}
@@ -610,16 +608,9 @@ export default function AdminVendorsPage() {
   return (
     <div className="min-h-screen bg-[#F8FBF8]">
       {/* Header */}
-      <header className="bg-[#2D6A4F] px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-outfit text-white text-xl font-semibold tracking-tight">
-              CheckVeda Admin
-            </h1>
-            <p className="font-inter text-white/70 text-sm mt-0.5">
-              Vendor Applications
-            </p>
-          </div>
+      <header className="bg-[#1B4D3E] px-4 sm:px-6" style={{ height: 90, paddingBottom: 15 }}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between h-full">
+          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
           <button
             onClick={handleLogout}
             className="font-inter text-sm text-white/80 hover:text-white px-4 py-2 rounded-[8px] border border-white/20 hover:border-white/40 transition-colors"
