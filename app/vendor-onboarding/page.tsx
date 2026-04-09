@@ -662,6 +662,36 @@ export default function VendorOnboardingPage() {
         </div>
       </div>
 
+      {/* Footer */}
+      <footer className="bg-forest-dark mt-12">
+        <div className="content-container py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center">
+              <img src="/checkveda-logo-footer.png" alt="CheckVeda" className="h-8 w-auto" />
+            </div>
+            <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+              <Link href="/policies/terms" target="_blank" className="font-inter text-[13px] text-white/70 hover:text-white transition-colors">
+                Terms &amp; Conditions
+              </Link>
+              <Link href="/policies/commission" target="_blank" className="font-inter text-[13px] text-white/70 hover:text-white transition-colors">
+                Commission Policy
+              </Link>
+              <Link href="/policies/returns" target="_blank" className="font-inter text-[13px] text-white/70 hover:text-white transition-colors">
+                Return/Refund Policy
+              </Link>
+              <Link href="/policies/privacy" target="_blank" className="font-inter text-[13px] text-white/70 hover:text-white transition-colors">
+                Privacy Notice
+              </Link>
+            </nav>
+          </div>
+          <div className="mt-6 pt-5 border-t border-white/10 text-center">
+            <p className="font-inter text-[12px] text-white/40">
+              &copy; {new Date().getFullYear()} CheckVeda. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+
       {/* Dev toolbar — only visible in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 bg-dark/95 text-white rounded-xl p-3 shadow-lg font-inter text-xs max-w-[200px]">
