@@ -374,7 +374,10 @@ export default function VendorOnboardingPage() {
       if (!formData.panNumber.trim()) {
         newErrors.panNumber = "PAN number is required";
       } else if (!/^[A-Z]{5}\d{4}[A-Z]$/.test(formData.panNumber.toUpperCase())) {
-        newErrors.panNumber = "Enter a valid PAN (e.g., AAAAA0000A)";
+        newErrors.panNumber = "Enter a valid PAN (e.g., ABCDE1234F)";
+      }
+      if (formData.fssaiLicense && !/^\d{14}$/.test(formData.fssaiLicense)) {
+        newErrors.fssaiLicense = "FSSAI license must be exactly 14 digits";
       }
       // Bank details validation
       if (!formData.accountHolderName.trim()) newErrors.accountHolderName = "Account holder name is required";
@@ -1392,7 +1395,7 @@ function Step4Documents({
             <FieldLabel>FSSAI License Number</FieldLabel>
             <FormInput
               value={formData.fssaiLicense}
-              onChange={(v) => updateField("fssaiLicense", v)}
+              onChange={(v) => updateField("fssaiLicense", v.replace(/\D/g, "").slice(0, 14))}
               placeholder="14-digit FSSAI number"
               error={errors.fssaiLicense}
             />

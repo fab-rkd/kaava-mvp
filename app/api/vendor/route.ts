@@ -99,6 +99,11 @@ export async function POST(request: Request) {
       errors.gstin = "Invalid GSTIN format";
     }
 
+    // FSSAI format (optional, 14 digits)
+    if (body.fssaiLicense && !/^\d{14}$/.test(body.fssaiLicense)) {
+      errors.fssaiLicense = "FSSAI license must be exactly 14 digits";
+    }
+
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ success: false, errors, message: "Please fix the validation errors." }, { status: 400 });
     }
