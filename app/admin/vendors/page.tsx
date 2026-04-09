@@ -17,27 +17,42 @@ interface VendorDocument {
 
 interface Vendor {
   id: string;
+  application_id: string | null;
   business_name: string;
+  business_type: string;
   owner_name: string;
   email: string;
   phone: string;
-  business_type: string;
-  gst_number: string;
-  ayush_license_number: string | null;
-  fssai_number: string | null;
-  address_line1: string;
-  address_line2: string | null;
-  city: string;
-  state: string;
-  pincode: string;
-  website: string | null;
+  alt_phone: string | null;
+  registered_address: string;
+  registered_city: string;
+  registered_state: string;
+  registered_pincode: string;
+  warehouse_same_as_registered: boolean;
+  warehouse_address: string | null;
+  warehouse_city: string | null;
+  warehouse_state: string | null;
+  warehouse_pincode: string | null;
+  brand_name: string;
+  product_type: string | null;
   product_categories: string[];
-  tier: string;
-  description: string | null;
+  other_category: string | null;
+  estimated_products: string | null;
+  business_description: string | null;
+  website: string | null;
+  social_links: string | null;
+  gstin: string | null;
+  fssai_number: string | null;
+  account_holder_name: string | null;
+  bank_name: string | null;
+  branch_name: string | null;
+  account_number: string | null;
+  ifsc_code: string | null;
+  account_type: string | null;
+  consent_accepted: boolean;
   status: "pending" | "verified" | "rejected";
   admin_notes: string | null;
   created_at: string;
-  updated_at: string | null;
 }
 
 type StatusFilter = "all" | "pending" | "verified" | "rejected";
@@ -52,17 +67,6 @@ function statusColor(status: string) {
       return "bg-red-100 text-red-800";
     default:
       return "bg-amber-100 text-amber-800";
-  }
-}
-
-function tierLabel(tier: string) {
-  switch (tier) {
-    case "premium":
-      return "Premium";
-    case "enterprise":
-      return "Enterprise";
-    default:
-      return "Standard";
   }
 }
 
@@ -275,11 +279,16 @@ function VendorDetail({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Status Badge */}
-          <div className="flex items-center gap-3">
+          {/* Status Badge + Application ID */}
+          <div className="flex items-center gap-3 flex-wrap">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor(vendor.status)}`}>
               {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
             </span>
+            {vendor.application_id && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 font-mono">
+                {vendor.application_id}
+              </span>
+            )}
             <span className="text-xs text-gray-500 font-inter">
               Applied {formatDate(vendor.created_at)}
             </span>
@@ -288,11 +297,12 @@ function VendorDetail({
           {/* Business Info */}
           <Section title="Business Information">
             <Field label="Business Name" value={vendor.business_name} />
+            <Field label="Brand Name" value={vendor.brand_name} />
             <Field label="Business Type" value={vendor.business_type} />
             <Field label="Owner Name" value={vendor.owner_name} />
-            <Field label="Tier" value={tierLabel(vendor.tier)} />
-            {vendor.description && (
-              <Field label="Description" value={vendor.description} full />
+            <Field label="Product Type" value={vendor.product_type || "—"} />
+            {vendor.business_description && (
+              <Field label="Description" value={vendor.business_description} full />
             )}
           </Section>
 
@@ -300,23 +310,46 @@ function VendorDetail({
           <Section title="Contact Information">
             <Field label="Email" value={vendor.email} />
             <Field label="Phone" value={vendor.phone} />
+            {vendor.alt_phone && <Field label="Alternate Phone" value={vendor.alt_phone} />}
             {vendor.website && <Field label="Website" value={vendor.website} />}
+            {vendor.social_links && <Field label="Social Media" value={vendor.social_links} full />}
           </Section>
 
-          {/* Address */}
-          <Section title="Address">
-            <Field label="Address" value={`${vendor.address_line1}${vendor.address_line2 ? ", " + vendor.address_line2 : ""}`} full />
-            <Field label="City" value={vendor.city} />
-            <Field label="State" value={vendor.state} />
-            <Field label="Pincode" value={vendor.pincode} />
+          {/* Registered Address */}
+          <Section title="Registered Address">
+            <Field label="Address" value={vendor.registered_address} full />
+            <Field label="City" value={vendor.registered_city} />
+            <Field label="State" value={vendor.registered_state} />
+            <Field label="Pincode" value={vendor.registered_pincode} />
           </Section>
+
+          {/* Warehouse Address */}
+          {!vendor.warehouse_same_as_registered && vendor.warehouse_address && (
+            <Section title="Warehouse / Pickup Address">
+              <Field label="Address" value={vendor.warehouse_address} full />
+              <Field label="City" value={vendor.warehouse_city || "—"} />
+              <Field label="State" value={vendor.warehouse_state || "—"} />
+              <Field label="Pincode" value={vendor.warehouse_pincode || "—"} />
+            </Section>
+          )}
 
           {/* Compliance */}
           <Section title="Compliance & Licensing">
-            <Field label="GST Number" value={vendor.gst_number} />
-            <Field label="AYUSH License" value={vendor.ayush_license_number || "Not provided"} />
+            <Field label="GSTIN" value={vendor.gstin || "Not provided"} />
             <Field label="FSSAI Number" value={vendor.fssai_number || "Not provided"} />
           </Section>
+
+          {/* Bank Details */}
+          {vendor.account_holder_name && (
+            <Section title="Bank Account Details">
+              <Field label="Account Holder" value={vendor.account_holder_name} />
+              <Field label="Bank Name" value={vendor.bank_name || "—"} />
+              <Field label="Branch" value={vendor.branch_name || "—"} />
+              <Field label="Account Number" value={vendor.account_number ? `****${vendor.account_number.slice(-4)}` : "—"} />
+              <Field label="IFSC Code" value={vendor.ifsc_code || "—"} />
+              <Field label="Account Type" value={vendor.account_type || "—"} />
+            </Section>
+          )}
 
           {/* Product Categories */}
           {vendor.product_categories && vendor.product_categories.length > 0 && (
@@ -330,6 +363,11 @@ function VendorDetail({
                     {cat}
                   </span>
                 ))}
+                {vendor.other_category && (
+                  <span className="px-3 py-1 bg-[#F8FBF8] text-[#2D6A4F] text-xs font-medium rounded-full border border-[#2D6A4F]/10">
+                    Other: {vendor.other_category}
+                  </span>
+                )}
               </div>
             </Section>
           )}
@@ -659,7 +697,7 @@ export default function AdminVendorsPage() {
                       Contact
                     </th>
                     <th className="font-inter text-xs font-medium text-gray-500 uppercase tracking-wider px-4 sm:px-6 py-3 hidden sm:table-cell">
-                      Tier
+                      App ID
                     </th>
                     <th className="font-inter text-xs font-medium text-gray-500 uppercase tracking-wider px-4 sm:px-6 py-3">
                       Status
@@ -700,8 +738,8 @@ export default function AdminVendorsPage() {
                         </p>
                       </td>
                       <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
-                        <span className="font-inter text-sm text-gray-700">
-                          {tierLabel(vendor.tier)}
+                        <span className="font-inter text-xs text-gray-500 font-mono">
+                          {vendor.application_id || "—"}
                         </span>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
