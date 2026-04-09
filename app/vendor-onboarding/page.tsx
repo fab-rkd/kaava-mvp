@@ -168,6 +168,64 @@ const initialFormData: FormData = {
   accountType: "",
 };
 
+// ─── Dev Test Data ───────────────────────────────────────────────────────────
+
+const TEST_DATA_SUCCESS: FormData = {
+  businessName: "Veda Organics Pvt. Ltd.",
+  businessType: "Private Limited Company",
+  ownerName: "Robin Kumar",
+  email: "robin@vedaorganics.com",
+  mobile: "9876543210",
+  alternateContact: "9123456780",
+  registeredAddress: { addressLine: "Ward No.2, Plot 3, Street 2, Near Canara Bank", city: "Chandigarh", state: "Chandigarh", pincode: "140101" },
+  warehouseSameAsRegistered: true,
+  warehouseAddress: { addressLine: "", city: "", state: "", pincode: "" },
+  brandName: "Veda Organics",
+  productType: "Both",
+  productCategories: ["Hair Care", "Skin Care", "Ghee & Dairy", "Cold-Pressed Oils"],
+  otherCategory: "",
+  estimatedProducts: "11-50",
+  businessDescription: "Premium Ayurvedic and organic products sourced from Himalayan farms.",
+  websiteUrl: "https://vedaorganics.com",
+  socialMediaLinks: ["https://instagram.com/vedaorganics", "https://facebook.com/vedaorganics"],
+  gstin: "22AAAAA0000A1Z5",
+  fssaiLicense: "10012345678901",
+  accountHolderName: "Veda Organics Pvt Ltd",
+  bankName: "State Bank of India",
+  accountNumber: "123456789012",
+  confirmAccountNumber: "123456789012",
+  ifscCode: "SBIN0001234",
+  accountType: "Current",
+};
+
+const TEST_DATA_MINIMAL: FormData = {
+  businessName: "Test Herbs",
+  businessType: "Sole Proprietorship",
+  ownerName: "Test User",
+  email: "test@herbs.com",
+  mobile: "9000000001",
+  alternateContact: "",
+  registeredAddress: { addressLine: "123 Test Road", city: "Delhi", state: "Delhi", pincode: "110001" },
+  warehouseSameAsRegistered: true,
+  warehouseAddress: { addressLine: "", city: "", state: "", pincode: "" },
+  brandName: "Test Herbs",
+  productType: "Herbal Medicine",
+  productCategories: ["Skin Care"],
+  otherCategory: "",
+  estimatedProducts: "1-3",
+  businessDescription: "",
+  websiteUrl: "",
+  socialMediaLinks: [""],
+  gstin: "",
+  fssaiLicense: "",
+  accountHolderName: "Test User",
+  bankName: "HDFC Bank",
+  accountNumber: "50100123456789",
+  confirmAccountNumber: "50100123456789",
+  ifscCode: "HDFC0000001",
+  accountType: "Savings",
+};
+
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function VendorOnboardingPage() {
@@ -550,6 +608,44 @@ export default function VendorOnboardingPage() {
           </Card>
         </div>
       </div>
+
+      {/* Dev toolbar — only visible in development */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 bg-dark/95 text-white rounded-xl p-3 shadow-lg font-inter text-xs max-w-[200px]">
+          <span className="font-semibold text-[11px] text-white/60 uppercase tracking-wide">Dev Tools</span>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                onClick={() => setCurrentStep(s)}
+                className={`w-7 h-7 rounded-md font-semibold transition-colors ${
+                  currentStep === s ? "bg-forest text-white" : "bg-white/10 hover:bg-white/20"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { setFormData(TEST_DATA_SUCCESS); setConsentChecked(true); }}
+            className="bg-forest/80 hover:bg-forest px-2 py-1.5 rounded-md text-left transition-colors"
+          >
+            Fill: Full Success
+          </button>
+          <button
+            onClick={() => { setFormData(TEST_DATA_MINIMAL); setConsentChecked(true); }}
+            className="bg-white/10 hover:bg-white/20 px-2 py-1.5 rounded-md text-left transition-colors"
+          >
+            Fill: Minimal
+          </button>
+          <button
+            onClick={() => { setFormData(initialFormData); setFiles({ gstCertificate: null, fssaiCertificate: null, trademarkCertificate: null, brandAuthorizationLetter: null }); setErrors({}); setConsentChecked(false); setSubmitError(""); }}
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2 py-1.5 rounded-md text-left transition-colors"
+          >
+            Reset All
+          </button>
+        </div>
+      )}
     </div>
   );
 }
