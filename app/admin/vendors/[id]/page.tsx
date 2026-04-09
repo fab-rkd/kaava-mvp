@@ -68,12 +68,14 @@ function formatDate(dateStr: string) {
   });
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
-  if (!value) return null;
+function InfoRow({ label, value, hide }: { label: string; value: string | null | undefined; hide?: boolean }) {
+  if (hide && !value) return null;
   return (
     <div className="flex flex-col sm:flex-row sm:gap-4 py-2.5 border-b border-gray-100 last:border-0">
       <span className="font-inter text-[13px] font-medium text-gray-500 sm:w-40 shrink-0">{label}</span>
-      <span className="font-inter text-sm text-gray-900">{value}</span>
+      <span className={`font-inter text-sm ${value ? "text-gray-900" : "text-gray-300 italic"}`}>
+        {value || "Not provided"}
+      </span>
     </div>
   );
 }
@@ -187,7 +189,7 @@ export default function VendorDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#1B4D3E] px-4 sm:px-6" style={{ height: 90, paddingBottom: 15 }}>
-        <div className="max-w-5xl mx-auto flex items-center justify-between h-full">
+        <div className="max-w-7xl mx-auto flex items-center justify-between h-full">
           <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
           <Link
             href="/admin/vendors"
@@ -199,7 +201,7 @@ export default function VendorDetailPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Top Bar — App ID + Status + Date */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           {vendor.application_id && (
@@ -224,16 +226,16 @@ export default function VendorDetailPage() {
               <InfoRow label="Business Type" value={vendor.business_type} />
               <InfoRow label="Owner Name" value={vendor.owner_name} />
               <InfoRow label="Product Type" value={vendor.product_type} />
-              <InfoRow label="Est. Products" value={vendor.estimated_products} />
-              <InfoRow label="Description" value={vendor.business_description} />
+              <InfoRow label="Est. Products" value={vendor.estimated_products} hide />
+              <InfoRow label="Description" value={vendor.business_description} hide />
             </SectionCard>
 
             <SectionCard title="Contact">
               <InfoRow label="Email" value={vendor.email} />
               <InfoRow label="Phone" value={vendor.phone} />
-              <InfoRow label="Alt Phone" value={vendor.alt_phone} />
-              <InfoRow label="Website" value={vendor.website} />
-              <InfoRow label="Social Media" value={vendor.social_links} />
+              <InfoRow label="Alt Phone" value={vendor.alt_phone} hide />
+              <InfoRow label="Website" value={vendor.website} hide />
+              <InfoRow label="Social Media" value={vendor.social_links} hide />
             </SectionCard>
 
             <SectionCard title="Registered Address">
