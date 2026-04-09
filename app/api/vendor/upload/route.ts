@@ -37,8 +37,10 @@ export async function POST(request: Request) {
     const supabase = getServiceClient();
 
     // Use a temp folder — files get associated with vendor after creation
+    // Timestamp + random suffix ensures no collisions even with identical filenames
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const filePath = `pending/${docType}/${Date.now()}_${sanitizedName}`;
+    const rand = Math.random().toString(36).slice(2, 8);
+    const filePath = `pending/${docType}/${Date.now()}_${rand}_${sanitizedName}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage

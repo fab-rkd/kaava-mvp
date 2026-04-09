@@ -50,16 +50,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, errors, message: "Please fix the validation errors." }, { status: 400 });
     }
 
+    // ── Generate human-friendly application ID ─────────────────────────
+    const supabase = getServiceClient();
+
+    const { count } = await supabase.from("vendors").select("id", { count: "exact", head: true });
+    const nextNum = (count ?? 0) + 1;
+    const year = new Date().getFullYear();
+    const applicationId = `CV-${year}-${String(nextNum).padStart(5, "0")}`;
+
     // ── Map form payload → Supabase columns ─────────────────────────────
     const warehouseAddr = body.warehouseSameAsRegistered
       ? body.registeredAddress
       : (body.warehouseAddress || {});
 
-    const supabase = getServiceClient();
-
     const { data, error } = await supabase
       .from("vendors")
       .insert({
+        application_id: applicationId,
         business_name: body.businessName.trim(),
         business_type: body.businessType,
         owner_name: body.ownerName.trim(),
@@ -120,7 +127,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, id: data.id }, { status: 201 });
+    return NextResponse.json({ success: true, id: applicationId }, { status: 201 });
   } catch (err) {
     console.error("Vendor submit error:", err);
     return NextResponse.json(
