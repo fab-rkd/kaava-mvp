@@ -532,6 +532,8 @@ export default function VendorOnboardingPage() {
       <OnboardingHeader />
 
       <div className="content-container py-8">
+        <h1 className="font-outfit text-page-title font-bold text-dark text-center mb-2">Vendor Onboarding</h1>
+        <p className="font-inter text-sm text-text-secondary text-center mb-6">Join CheckVeda&apos;s trusted marketplace of verified Ayurvedic &amp; organic brands</p>
         <StepIndicator currentStep={currentStep} onStepClick={goToStep} />
 
         <div className="max-w-3xl mx-auto mt-8">
@@ -681,12 +683,11 @@ export default function VendorOnboardingPage() {
 
 function OnboardingHeader() {
   return (
-    <header className="w-full bg-forest-dark" style={{ height: 80 }}>
-      <div className="content-container flex items-center justify-between h-full">
+    <header className="w-full bg-forest-dark" style={{ height: 72 }}>
+      <div className="content-container flex items-center justify-center h-full">
         <Link href="/" className="flex items-center">
-          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-10 w-auto" />
+          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-9 w-auto" />
         </Link>
-        <span className="font-inter text-[15px] text-white/85 font-medium">Vendor Onboarding</span>
       </div>
     </header>
   );
