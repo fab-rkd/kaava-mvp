@@ -188,8 +188,8 @@ export default function VendorDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-[#1B4D3E] px-4 sm:px-6" style={{ height: 90, paddingBottom: 15 }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-full">
+      <header className="bg-[#1B4D3E]" style={{ height: 90, paddingBottom: 15 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-full">
           <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
           <Link
             href="/admin/vendors"
