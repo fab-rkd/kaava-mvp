@@ -247,6 +247,7 @@ export default function VendorOnboardingPage() {
   const [applicationId, setApplicationId] = useState("");
   const [consentChecked, setConsentChecked] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [editingFromReview, setEditingFromReview] = useState(false);
 
   // ─── Field Updaters ───────────────────────────────────────────────────────
 
@@ -406,9 +407,16 @@ export default function VendorOnboardingPage() {
 
   function goToStep(step: number) {
     if (step < currentStep) {
+      if (currentStep === 5) setEditingFromReview(true);
       setCurrentStep(step);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  }
+
+  function backToReview() {
+    setEditingFromReview(false);
+    setCurrentStep(5);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // ─── Submit ───────────────────────────────────────────────────────────────
@@ -584,13 +592,24 @@ export default function VendorOnboardingPage() {
                 )}
 
                 {currentStep < 5 ? (
-                  <Button
-                    onClick={goNext}
-                    className="h-10 px-7 gap-2 bg-forest text-white hover:bg-forest-dark font-inter text-sm font-semibold"
-                  >
-                    Continue
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    {editingFromReview && (
+                      <Button
+                        variant="outline"
+                        onClick={backToReview}
+                        className="h-10 px-5 gap-2 font-inter text-sm font-semibold border-forest text-forest hover:bg-surface-green"
+                      >
+                        Back to Review
+                      </Button>
+                    )}
+                    <Button
+                      onClick={goNext}
+                      className="h-10 px-7 gap-2 bg-forest text-white hover:bg-forest-dark font-inter text-sm font-semibold"
+                    >
+                      Continue
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 ) : (
                   <Button
                     onClick={handleSubmit}
@@ -1475,28 +1494,28 @@ function ReviewCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-0 ring-1 ring-border-green overflow-hidden">
+    <div className="rounded-xl ring-1 ring-border-green overflow-hidden bg-white">
       <div className="flex items-center justify-between px-5 py-3 bg-surface-green border-b border-border-green">
         <h3 className="font-outfit text-body font-semibold text-dark">{title}</h3>
         <button
           onClick={() => onEdit(step)}
-          className="inline-flex items-center gap-1 font-inter text-[12px] font-semibold text-forest hover:text-forest-dark transition-colors"
+          className="inline-flex items-center gap-1.5 font-inter text-[13px] font-semibold text-forest hover:text-forest-dark transition-colors"
         >
           <Pencil className="w-3.5 h-3.5" />
           Edit
         </button>
       </div>
-      <CardContent className="px-5 py-4">{children}</CardContent>
-    </Card>
+      <div className="px-5 py-4">{children}</div>
+    </div>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
-    <div className="flex flex-col sm:flex-row sm:gap-4 py-1.5">
-      <span className="font-inter text-[12px] text-muted sm:w-44 shrink-0">{label}</span>
-      <span className="font-inter text-sm text-dark">{value}</span>
+    <div className="flex flex-col sm:flex-row sm:gap-4 py-2">
+      <span className="font-inter text-[13px] font-medium text-text-secondary sm:w-44 shrink-0">{label}</span>
+      <span className="font-inter text-sm font-medium text-dark">{value}</span>
     </div>
   );
 }
@@ -1581,14 +1600,23 @@ function Step5Review({
             <ReviewRow label="GSTIN" value={formData.gstin} />
             <ReviewRow label="FSSAI License" value={formData.fssaiLicense} />
             {uploadedDocs.length > 0 && (
-              <div className="py-1.5">
-                <span className="font-inter text-[12px] text-muted">Uploaded Documents</span>
-                <div className="flex flex-wrap gap-2 mt-1.5">
+              <div className="py-2">
+                <span className="font-inter text-[13px] font-medium text-text-secondary">Uploaded Documents</span>
+                <div className="flex flex-wrap gap-2 mt-2">
                   {uploadedDocs.map(([key, file]) => (
-                    <span key={key} className="inline-flex items-center gap-1.5 bg-white border border-border-green rounded-full px-3 py-1 font-inter text-[12px] text-dark">
-                      <FileText className="w-3 h-3 text-forest" />
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        const url = URL.createObjectURL(file!);
+                        window.open(url, "_blank");
+                      }}
+                      className="inline-flex items-center gap-1.5 bg-white border border-border-green rounded-full px-3 py-1.5 font-inter text-[12px] text-dark hover:bg-surface-green hover:border-forest/30 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-forest" />
                       {file!.name}
-                    </span>
+                      <span className="text-[10px] text-forest font-medium ml-0.5">Preview</span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1612,11 +1640,11 @@ function Step5Review({
           />
           <span className="font-inter text-[13px] text-text-label leading-relaxed">
             I agree to CheckVeda&apos;s{" "}
-            <span className="text-forest font-medium">Terms & Conditions</span>,{" "}
-            <span className="text-forest font-medium">Marketplace Commission Policy</span>, and{" "}
-            <span className="text-forest font-medium">Return/Refund Policy</span>.
+            <Link href="/policies/terms" target="_blank" className="text-forest font-medium underline underline-offset-2 hover:text-forest-dark">Terms &amp; Conditions</Link>,{" "}
+            <Link href="/policies/commission" target="_blank" className="text-forest font-medium underline underline-offset-2 hover:text-forest-dark">Marketplace Commission Policy</Link>, and{" "}
+            <Link href="/policies/returns" target="_blank" className="text-forest font-medium underline underline-offset-2 hover:text-forest-dark">Return/Refund Policy</Link>.
             I consent to the processing of my data as described in the{" "}
-            <span className="text-forest font-medium">Privacy Notice (DPDP Act 2023)</span>.
+            <Link href="/policies/privacy" target="_blank" className="text-forest font-medium underline underline-offset-2 hover:text-forest-dark">Privacy Notice (DPDP Act 2023)</Link>.
           </span>
         </label>
         <FieldError message={errors.consent} />
