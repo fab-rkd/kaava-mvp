@@ -1,26 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 export default function CommissionPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-[#1B4D3E] pb-15">
-        <div className="flex justify-center pt-6">
-          <Image
-            src="/checkveda-logo-header.png"
-            alt="CheckVeda"
-            width={160}
-            height={90}
-            className="h-12 w-auto"
-            priority
-          />
-        </div>
-      </header>
-
-      {/* Content */}
       <main className="mx-auto max-w-3xl px-6 py-12">
         {/* Back link */}
         <Link
@@ -388,6 +371,5 @@ export default function CommissionPolicyPage() {
           </section>
         </div>
       </main>
-    </div>
   );
 }

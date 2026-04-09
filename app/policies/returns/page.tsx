@@ -1,28 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 export default function ReturnRefundPolicyPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-[#1B4D3E] pb-15">
-        <div className="flex justify-center pt-6">
-          <Link href="/">
-            <Image
-              src="/checkveda-logo-header.png"
-              alt="CheckVeda"
-              width={160}
-              height={90}
-              className="h-12 w-auto"
-              priority
-            />
-          </Link>
-        </div>
-      </header>
-
-      {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         {/* Back link */}
         <Link
@@ -370,6 +351,5 @@ export default function ReturnRefundPolicyPage() {
           Back to Vendor Onboarding
         </Link>
       </main>
-    </div>
   );
 }

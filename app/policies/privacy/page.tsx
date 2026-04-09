@@ -1,24 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 export default function PrivacyNoticePage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-[#1B4D3E] pb-15 flex items-center justify-center" style={{ height: "90px" }}>
-        <Image
-          src="/checkveda-logo-header.png"
-          alt="CheckVeda"
-          width={180}
-          height={48}
-          className="h-12 w-auto"
-          priority
-        />
-      </header>
-
-      {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         {/* Back link */}
         <Link
@@ -505,6 +490,5 @@ export default function PrivacyNoticePage() {
           </section>
         </div>
       </main>
-    </div>
   );
 }

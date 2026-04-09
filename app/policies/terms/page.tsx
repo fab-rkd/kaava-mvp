@@ -5,17 +5,6 @@ import { ArrowLeft } from "lucide-react";
 
 export default function VendorTermsPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="w-full bg-forest-dark" style={{ height: 90, paddingBottom: 15 }}>
-        <div className="flex items-center justify-center h-full">
-          <Link href="/" className="flex items-center">
-            <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-12 w-auto" />
-          </Link>
-        </div>
-      </header>
-
-      {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         {/* Back link */}
         <Link
@@ -767,6 +756,5 @@ export default function VendorTermsPage() {
           </div>
         </div>
       </main>
-    </div>
   );
 }
