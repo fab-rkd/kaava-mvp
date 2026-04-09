@@ -87,6 +87,13 @@ export async function POST(request: Request) {
     if (!body.ifscCode?.trim()) errors.ifscCode = "IFSC code is required";
     if (!body.accountType) errors.accountType = "Account type is required";
 
+    // PAN validation (required)
+    if (!body.panNumber?.trim()) {
+      errors.panNumber = "PAN number is required";
+    } else if (!/^[A-Z]{5}\d{4}[A-Z]$/i.test(body.panNumber)) {
+      errors.panNumber = "Invalid PAN format";
+    }
+
     // GSTIN format (optional field)
     if (body.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/i.test(body.gstin)) {
       errors.gstin = "Invalid GSTIN format";
@@ -143,6 +150,7 @@ export async function POST(request: Request) {
         product_type: body.productType || null,
         other_category: body.otherCategory?.trim() || null,
 
+        pan_number: body.panNumber?.trim().toUpperCase() || null,
         gstin: body.gstin?.trim().toUpperCase() || null,
         fssai_number: body.fssaiLicense?.trim() || null,
 
@@ -173,6 +181,12 @@ export async function POST(request: Request) {
         if (detail.includes("phone")) {
           return NextResponse.json(
             { success: false, errors: { mobile: "A vendor with this mobile number already exists" }, message: "This phone number is already registered." },
+            { status: 400 }
+          );
+        }
+        if (detail.includes("pan")) {
+          return NextResponse.json(
+            { success: false, errors: { panNumber: "A vendor with this PAN already exists" }, message: "This PAN is already registered." },
             { status: 400 }
           );
         }

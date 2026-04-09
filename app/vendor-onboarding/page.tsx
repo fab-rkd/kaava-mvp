@@ -116,6 +116,7 @@ interface FormData {
   socialMediaLinks: string[];
   // Step 4
   gstin: string;
+  panNumber: string;
   fssaiLicense: string;
   accountHolderName: string;
   bankName: string;
@@ -160,6 +161,7 @@ const initialFormData: FormData = {
   websiteUrl: "",
   socialMediaLinks: [""],
   gstin: "",
+  panNumber: "",
   fssaiLicense: "",
   accountHolderName: "",
   bankName: "",
@@ -191,6 +193,7 @@ const TEST_DATA_SUCCESS: FormData = {
   websiteUrl: "https://vedaorganics.com",
   socialMediaLinks: ["https://instagram.com/vedaorganics", "https://facebook.com/vedaorganics"],
   gstin: "22AAAAA0000A1Z5",
+  panNumber: "AAAAA0000A",
   fssaiLicense: "10012345678901",
   accountHolderName: "Veda Organics Pvt Ltd",
   bankName: "State Bank of India",
@@ -220,6 +223,7 @@ const TEST_DATA_MINIMAL: FormData = {
   websiteUrl: "",
   socialMediaLinks: [""],
   gstin: "",
+  panNumber: "BBBBB1111B",
   fssaiLicense: "",
   accountHolderName: "Test User",
   bankName: "HDFC Bank",
@@ -366,6 +370,11 @@ export default function VendorOnboardingPage() {
     if (step === 4) {
       if (formData.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/.test(formData.gstin.toUpperCase())) {
         newErrors.gstin = "Enter a valid GSTIN (e.g., 22AAAAA0000A1Z5)";
+      }
+      if (!formData.panNumber.trim()) {
+        newErrors.panNumber = "PAN number is required";
+      } else if (!/^[A-Z]{5}\d{4}[A-Z]$/.test(formData.panNumber.toUpperCase())) {
+        newErrors.panNumber = "Enter a valid PAN (e.g., AAAAA0000A)";
       }
       // Bank details validation
       if (!formData.accountHolderName.trim()) newErrors.accountHolderName = "Account holder name is required";
@@ -1360,7 +1369,16 @@ function Step4Documents({
         Upload your business documents and bank details for verification and payouts.
       </p>
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel required>PAN Number</FieldLabel>
+            <FormInput
+              value={formData.panNumber}
+              onChange={(v) => updateField("panNumber", v.toUpperCase().slice(0, 10))}
+              placeholder="e.g., AAAAA0000A"
+              error={errors.panNumber}
+            />
+          </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel>GSTIN</FieldLabel>
             <FormInput
@@ -1614,6 +1632,7 @@ function Step5Review({
 
         <ReviewCard title="Documents & Compliance" step={4} onEdit={onEditStep}>
           <div className="flex flex-col divide-y divide-divider">
+            <ReviewRow label="PAN Number" value={formData.panNumber} />
             <ReviewRow label="GSTIN" value={formData.gstin} />
             <ReviewRow label="FSSAI License" value={formData.fssaiLicense} />
             {uploadedDocs.length > 0 && (
