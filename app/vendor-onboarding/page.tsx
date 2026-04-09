@@ -119,6 +119,7 @@ interface FormData {
   fssaiLicense: string;
   accountHolderName: string;
   bankName: string;
+  branchName: string;
   accountNumber: string;
   confirmAccountNumber: string;
   ifscCode: string;
@@ -162,6 +163,7 @@ const initialFormData: FormData = {
   fssaiLicense: "",
   accountHolderName: "",
   bankName: "",
+  branchName: "",
   accountNumber: "",
   confirmAccountNumber: "",
   ifscCode: "",
@@ -192,6 +194,7 @@ const TEST_DATA_SUCCESS: FormData = {
   fssaiLicense: "10012345678901",
   accountHolderName: "Veda Organics Pvt Ltd",
   bankName: "State Bank of India",
+  branchName: "HAJIGANJ",
   accountNumber: "123456789012",
   confirmAccountNumber: "123456789012",
   ifscCode: "SBIN0001234",
@@ -220,6 +223,7 @@ const TEST_DATA_MINIMAL: FormData = {
   fssaiLicense: "",
   accountHolderName: "Test User",
   bankName: "HDFC Bank",
+  branchName: "FORT",
   accountNumber: "50100123456789",
   confirmAccountNumber: "50100123456789",
   ifscCode: "HDFC0000001",
@@ -1284,13 +1288,13 @@ function Step4Documents({
   onFileSelect: (key: string, file: File | null) => void;
 }) {
   const [ifscLookup, setIfscLookup] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [ifscBranch, setIfscBranch] = useState("");
 
   async function lookupIfsc(code: string) {
     updateField("ifscCode", code.toUpperCase().slice(0, 11));
     if (code.length !== 11) {
       setIfscLookup("idle");
-      setIfscBranch("");
+      updateField("bankName", "");
+      updateField("branchName", "");
       return;
     }
     setIfscLookup("loading");
@@ -1299,15 +1303,17 @@ function Step4Documents({
       if (res.ok) {
         const data = await res.json();
         updateField("bankName", data.BANK || "");
-        setIfscBranch(data.BRANCH || "");
+        updateField("branchName", data.BRANCH || "");
         setIfscLookup("success");
       } else {
         setIfscLookup("error");
-        setIfscBranch("");
+        updateField("bankName", "");
+        updateField("branchName", "");
       }
     } catch {
       setIfscLookup("error");
-      setIfscBranch("");
+      updateField("bankName", "");
+      updateField("branchName", "");
     }
   }
 
@@ -1394,7 +1400,7 @@ function Step4Documents({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="flex flex-col gap-1.5">
                 <FieldLabel required>IFSC Code</FieldLabel>
                 <div className="relative">
@@ -1416,17 +1422,24 @@ function Step4Documents({
                 {ifscLookup === "error" && formData.ifscCode.length === 11 && (
                   <p className="font-inter text-[12px] text-red-500 mt-0.5">Invalid IFSC code — please check and re-enter</p>
                 )}
-                {ifscBranch && (
-                  <p className="font-inter text-[12px] text-forest mt-0.5">Branch: {ifscBranch}</p>
-                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <FieldLabel required>Bank Name</FieldLabel>
-                <FormInput
+                <Input
                   value={formData.bankName}
-                  onChange={(v) => updateField("bankName", v)}
-                  placeholder={ifscLookup === "loading" ? "Looking up..." : "Auto-filled from IFSC or enter manually"}
-                  error={errors.bankName}
+                  readOnly
+                  placeholder={ifscLookup === "loading" ? "Looking up..." : "Auto-filled from IFSC"}
+                  className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder bg-surface cursor-default"
+                />
+                <FieldError message={errors.bankName} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Branch</FieldLabel>
+                <Input
+                  value={formData.branchName}
+                  readOnly
+                  placeholder={ifscLookup === "loading" ? "Looking up..." : "Auto-filled from IFSC"}
+                  className="h-10 px-3.5 font-inter text-sm text-dark placeholder:text-placeholder bg-surface cursor-default"
                 />
               </div>
             </div>
@@ -1582,6 +1595,7 @@ function Step5Review({
             )}
             <ReviewRow label="Account Holder" value={formData.accountHolderName} />
             <ReviewRow label="Bank Name" value={formData.bankName} />
+            <ReviewRow label="Branch" value={formData.branchName} />
             <ReviewRow label="Account Number" value={formData.accountNumber ? `****${formData.accountNumber.slice(-4)}` : ""} />
             <ReviewRow label="IFSC Code" value={formData.ifscCode} />
             <ReviewRow label="Account Type" value={formData.accountType} />
