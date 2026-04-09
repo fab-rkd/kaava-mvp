@@ -9,12 +9,11 @@ export async function POST(request: Request) {
     const formData = await request.formData();
 
     const file = formData.get("file") as File | null;
-    const vendorId = formData.get("vendorId") as string | null;
-    const docType = formData.get("docType") as string | null;
+    const docType = formData.get("type") as string | null;
 
-    if (!file || !vendorId || !docType) {
+    if (!file || !docType) {
       return NextResponse.json(
-        { success: false, message: "file, vendorId, and docType are required" },
+        { success: false, message: "file and type are required" },
         { status: 400 }
       );
     }
@@ -37,9 +36,9 @@ export async function POST(request: Request) {
 
     const supabase = getServiceClient();
 
-    // Sanitize filename
+    // Use a temp folder — files get associated with vendor after creation
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const filePath = `${vendorId}/${docType}/${Date.now()}_${sanitizedName}`;
+    const filePath = `pending/${docType}/${Date.now()}_${sanitizedName}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
@@ -57,27 +56,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert record into vendor_documents table
-    const { error: dbError } = await supabase.from("vendor_documents").insert({
-      vendor_id: vendorId,
-      doc_type: docType,
-      file_path: filePath,
-      file_name: file.name,
-      file_size: file.size,
-      mime_type: file.type,
-    });
-
-    if (dbError) {
-      console.error("Document record insert error:", dbError);
-      // Clean up uploaded file on DB failure
-      await supabase.storage.from("vendor-docs").remove([filePath]);
-      return NextResponse.json(
-        { success: false, message: "Failed to save document record" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true, filePath }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      filePath,
+      filename: file.name,
+    }, { status: 201 });
   } catch {
     return NextResponse.json(
       { success: false, message: "Invalid request" },

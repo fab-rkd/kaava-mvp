@@ -562,12 +562,12 @@ export default function VendorOnboardingPage() {
 
 function OnboardingHeader() {
   return (
-    <header className="w-full bg-forest" style={{ height: 72 }}>
+    <header className="w-full bg-forest-dark" style={{ height: 80 }}>
       <div className="content-container flex items-center justify-between h-full">
         <Link href="/" className="flex items-center">
-          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-8 w-auto" />
+          <img src="/checkveda-logo-header.png" alt="CheckVeda" className="h-10 w-auto" />
         </Link>
-        <span className="font-inter text-[14px] text-white/85">Vendor Onboarding</span>
+        <span className="font-inter text-[15px] text-white/85 font-medium">Vendor Onboarding</span>
       </div>
     </header>
   );
@@ -1199,7 +1199,7 @@ function Step4Documents({
     }
     setIfscLookup("loading");
     try {
-      const res = await fetch(`https://ifsc.razorpay.com/${code.toUpperCase()}`);
+      const res = await fetch(`/api/ifsc/${code.toUpperCase()}`);
       if (res.ok) {
         const data = await res.json();
         updateField("bankName", data.BANK || "");
