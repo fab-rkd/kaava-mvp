@@ -242,6 +242,7 @@ export default function VendorOnboardingPage() {
     brandAuthorizationLetter: null,
   });
   const [errors, setErrors] = useState<ErrorState>({});
+  const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [applicationId, setApplicationId] = useState("");
@@ -457,6 +458,7 @@ export default function VendorOnboardingPage() {
           ? formData.registeredAddress
           : formData.warehouseAddress,
         documents: uploadedFiles,
+        _website_confirm: honeypot,
       };
 
       const res = await fetch("/api/vendor", {
@@ -551,6 +553,20 @@ export default function VendorOnboardingPage() {
               </button>
             </div>
           )}
+
+          {/* Honeypot — invisible to humans, bots auto-fill it */}
+          <div aria-hidden="true" className="absolute opacity-0 -z-10 h-0 overflow-hidden">
+            <label htmlFor="website_confirm">Leave this empty</label>
+            <input
+              id="website_confirm"
+              name="website_confirm"
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
 
           <Card className="shadow-card border-0 ring-0">
             <CardContent className="p-6 sm:p-8 md:p-10">

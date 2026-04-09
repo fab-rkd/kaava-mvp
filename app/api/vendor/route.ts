@@ -1,9 +1,55 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 
+// ── Rate limiting (in-memory for dev, use Redis/KV for production) ────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 3; // max submissions per window
+const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
+// ── Max payload size check (10MB) ─────────────────────────────────────────
+const MAX_BODY_SIZE = 10 * 1024 * 1024;
+
 export async function POST(request: Request) {
   try {
+    // ── Rate limiting ─────────────────────────────────────────────────
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { success: false, message: "Too many submissions. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    // ── Payload size check ────────────────────────────────────────────
+    const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+    if (contentLength > MAX_BODY_SIZE) {
+      return NextResponse.json(
+        { success: false, message: "Request too large." },
+        { status: 413 }
+      );
+    }
+
     const body = await request.json();
+
+    // ── Honeypot check ────────────────────────────────────────────────
+    if (body._website_confirm) {
+      // Bots fill hidden fields — reject silently with fake success
+      return NextResponse.json({ success: true, id: "CV-0000-00000" }, { status: 201 });
+    }
 
     // ── Server-side validation ──────────────────────────────────────────
     const errors: Record<string, string> = {};
@@ -115,9 +161,29 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Supabase insert error:", error);
+      // Handle unique constraint violations
       if (error.code === "23505") {
+        const detail = error.message || "";
+        if (detail.includes("email")) {
+          return NextResponse.json(
+            { success: false, errors: { email: "A vendor with this email already exists" }, message: "This email is already registered." },
+            { status: 400 }
+          );
+        }
+        if (detail.includes("phone")) {
+          return NextResponse.json(
+            { success: false, errors: { mobile: "A vendor with this mobile number already exists" }, message: "This phone number is already registered." },
+            { status: 400 }
+          );
+        }
+        if (detail.includes("gstin")) {
+          return NextResponse.json(
+            { success: false, errors: { gstin: "A vendor with this GSTIN already exists" }, message: "This GSTIN is already registered." },
+            { status: 400 }
+          );
+        }
         return NextResponse.json(
-          { success: false, errors: { email: "A vendor with this email already exists" }, message: "Duplicate email." },
+          { success: false, message: "A vendor with these details already exists." },
           { status: 400 }
         );
       }
