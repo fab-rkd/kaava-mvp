@@ -37,7 +37,7 @@ export async function GET(
       .from("vendor_documents")
       .select("*")
       .eq("vendor_id", id)
-      .order("created_at", { ascending: false });
+      .order("uploaded_at", { ascending: false });
 
     if (docsError) {
       console.error("Fetch documents error:", docsError);

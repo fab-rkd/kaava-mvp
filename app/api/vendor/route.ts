@@ -172,6 +172,29 @@ export async function POST(request: Request) {
       .select("id")
       .single();
 
+    // ── Insert document records into vendor_documents table ──────────
+    if (data?.id && body.documents && typeof body.documents === "object") {
+      const docRows = Object.entries(body.documents)
+        .filter(([, val]) => val && typeof val === "object" && (val as Record<string, string>).filePath)
+        .map(([docType, val]) => ({
+          vendor_id: data.id,
+          doc_type: docType,
+          file_path: (val as Record<string, string>).filePath,
+          file_name: (val as Record<string, string>).fileName || docType,
+        }));
+
+      if (docRows.length > 0) {
+        const { error: docsError } = await supabase
+          .from("vendor_documents")
+          .insert(docRows);
+
+        if (docsError) {
+          console.error("Failed to insert vendor documents:", docsError);
+          // Non-fatal: vendor was created, documents just weren't linked
+        }
+      }
+    }
+
     if (error) {
       console.error("Supabase insert error:", error);
       // Handle unique constraint violations

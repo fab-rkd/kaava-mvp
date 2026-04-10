@@ -446,7 +446,7 @@ export default function VendorOnboardingPage() {
 
     try {
       // Upload files first
-      const uploadedFiles: Record<string, string> = {};
+      const uploadedFiles: Record<string, { filePath: string; fileName: string }> = {};
       for (const [key, file] of Object.entries(files)) {
         if (file) {
           const fd = new globalThis.FormData();
@@ -459,7 +459,7 @@ export default function VendorOnboardingPage() {
             return;
           }
           const data = await uploadRes.json();
-          uploadedFiles[key] = data.url || data.filename;
+          uploadedFiles[key] = { filePath: data.filePath, fileName: data.filename };
         }
       }
 
